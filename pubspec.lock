@@ -139,6 +139,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.8.0"
+  mysql:
+    dependency: "direct main"
+    description:
+      name: mysql
+      sha256: c4f6ce15a6ab36db3f5671edd99b1d025af269b60fa56ca24ddd2f242f04b7fd
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.1"
   path:
     dependency: transitive
     description:

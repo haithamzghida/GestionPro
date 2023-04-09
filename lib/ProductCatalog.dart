@@ -39,37 +39,37 @@ class _ProductCatalogState extends State<ProductCatalog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-        CarouselSlider.builder(
-        itemCount: 4,
-        itemBuilder: (BuildContext context, int index, int realIndex) {
+          CarouselSlider.builder(
+            itemCount: 4,
+            itemBuilder: (BuildContext context, int index, int realIndex) {
 
-          List<String> images = [      'https://img.freepik.com/photos-premium/cafe-internet-modele-promotion-medias-sociaux-publicite-banniere-publicitaire-marketing-produit-eps-10_182292-232.jpg?w=1060',      'assets/HR.png',      'assets/vape.png',      'assets/vector.jpg',    ];
+              List<String> images = [      'https://img.freepik.com/photos-premium/cafe-internet-modele-promotion-medias-sociaux-publicite-banniere-publicitaire-marketing-produit-eps-10_182292-232.jpg?w=1060',      'assets/HR.png',      'assets/vape.png',      'assets/vector.jpg',    ];
 
-          final image = images[index];
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-
-
-
-              Image.asset(
-                image,
-                fit: BoxFit.cover,
-                width: double.infinity,
-              ),
-            ],
-          );
-        },
-        options: CarouselOptions(
-          autoPlay: true,
-          enlargeCenterPage: true,
-          aspectRatio: 1.4,
-          viewportFraction: 0.8,
-        ),
-      ),
+              final image = images[index];
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
 
 
-        Padding(
+
+                  Image.asset(
+                    image,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                  ),
+                ],
+              );
+            },
+            options: CarouselOptions(
+              autoPlay: true,
+              enlargeCenterPage: true,
+              aspectRatio: 1.4,
+              viewportFraction: 0.8,
+            ),
+          ),
+
+
+          Padding(
             padding: const EdgeInsets.only(left: 20, top: 20, bottom: 20),
             child: Text(
               'Shop by category',
@@ -80,65 +80,65 @@ class _ProductCatalogState extends State<ProductCatalog> {
             ),
           ),
 
-      Container(
-      margin: EdgeInsets.symmetric(horizontal: 20.0),
-      child: GridView.count(
-        crossAxisCount: 3,
-        childAspectRatio: 1.0,
-        padding: const EdgeInsets.all(4.0),
-        mainAxisSpacing: 7.0,
-        crossAxisSpacing: 7.0,
-        shrinkWrap: true,
-        physics: NeverScrollableScrollPhysics(),
-        children: <Widget>[
-          CategoryTile(
-            icon: Icons.local_cafe,
-            title: 'Café',
-            id: 1,
+          Container(
+            margin: EdgeInsets.symmetric(horizontal: 20.0),
+            child: GridView.count(
+              crossAxisCount: 3,
+              childAspectRatio: 1.0,
+              padding: const EdgeInsets.all(4.0),
+              mainAxisSpacing: 7.0,
+              crossAxisSpacing: 7.0,
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              children: <Widget>[
+                CategoryTile(
+                  icon: Icons.local_cafe,
+                  title: 'Café',
+                  id: 1,
+                ),
+                CategoryTile(
+                  icon: Icons.local_drink,
+                  title: 'Thé',
+                  id: 2,
+                ),
+                CategoryTile(
+                  icon: Icons.local_bar,
+                  title: 'Mojito',
+                  id: 3,
+                ),
+                CategoryTile(
+                  icon: Icons.cake,
+                  title: 'Cheesecake',
+                  id: 4,
+                ),
+                CategoryTile(
+                  icon: Icons.icecream,
+                  title: 'Tiramisu',
+                  id: 5,
+                ),
+                CategoryTile(
+                  icon: Icons.local_drink,
+                  title: 'Jus',
+                  id: 6,
+                ),
+                CategoryTile(
+                  icon: Icons.local_bar,
+                  title: 'Frappe',
+                  id: 7,
+                ),
+                CategoryTile(
+                  icon: Icons.smoking_rooms,
+                  title: 'Vape',
+                  id: 8,
+                ),
+                CategoryTile(
+                  icon: Icons.liquor,
+                  title: 'Liquide',
+                  id: 9,
+                ),
+              ],
+            ),
           ),
-          CategoryTile(
-            icon: Icons.local_drink,
-            title: 'Thé',
-            id: 2,
-          ),
-          CategoryTile(
-            icon: Icons.local_bar,
-            title: 'Mojito',
-            id: 3,
-          ),
-          CategoryTile(
-            icon: Icons.cake,
-            title: 'Cheesecake',
-            id: 4,
-          ),
-          CategoryTile(
-            icon: Icons.icecream,
-            title: 'Tiramisu',
-            id: 5,
-          ),
-          CategoryTile(
-            icon: Icons.local_drink,
-            title: 'Jus',
-            id: 6,
-          ),
-          CategoryTile(
-            icon: Icons.local_bar,
-            title: 'Frappe',
-            id: 7,
-          ),
-          CategoryTile(
-            icon: Icons.smoking_rooms,
-            title: 'Vape',
-            id: 8,
-          ),
-          CategoryTile(
-            icon: Icons.liquor,
-            title: 'Liquide',
-            id: 9,
-          ),
-        ],
-      ),
-    ),
 
           Padding(
             padding: const EdgeInsets.only(left: 20, top: 20, bottom: 20),
@@ -151,7 +151,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
             ),
           ),
           GridView.builder(
-           // padding: EdgeInsets.fromLTRB(80.0, 0, 80.0, 20.0), // Add vertical padding
+            // padding: EdgeInsets.fromLTRB(80.0, 0, 80.0, 20.0), // Add vertical padding
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
               mainAxisSpacing: 4.0,
@@ -235,7 +235,11 @@ class CategoryTile extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => CategoryPage(categoryId: id, category: '',),
+            builder: (context) => CategoryPage(
+              categoryId: id,
+              customerId: 0,
+              category: '',
+            ),
           ),
         );
       },

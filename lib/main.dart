@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/registration.dart';
 import 'ProductCatalog.dart';
+import 'home_page.dart';
+import 'login.dart';
 import 'splash_screen.dart';
 import 'dart:math';
 
@@ -13,20 +16,15 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'The house coffee shop',
       home: SplashScreenPage(),
+      initialRoute: '/',
+      routes: {
+
+        '/login': (context) => LoginPage(), // Define a route for LoginPage
+        '/registration' : (context) => RegistrationPage(),
+      },
     );
   }
 }
 
 
 
-class Cart extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        'Cart here',
-        style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-}

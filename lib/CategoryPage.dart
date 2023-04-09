@@ -13,8 +13,9 @@ Future<List<dynamic>> fetchCategoryProducts(int categoryId) async {
 
 class CategoryPage extends StatelessWidget {
   final int categoryId;
+  final int customerId;
+  const CategoryPage({Key? key, required this.categoryId, required this.customerId, required String category}) : super(key: key);
 
-  const CategoryPage({Key? key, required this.categoryId, required String category}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +43,7 @@ class CategoryPage extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
+                        Text('Customer ID: $customerId'),
                         Expanded(
                           flex: 3,
                           child: Image.network(product['image_url']),
@@ -73,14 +75,34 @@ class CategoryPage extends StatelessWidget {
                                   textAlign: TextAlign.center,
                                 ),
                                 ElevatedButton(
-                                  onPressed: () {
-                                    cartProducts.add(product);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text("${product['name']} added to cart"),
-                                        duration: Duration(seconds: 2),
-                                      ),
-                                    );
+                                  onPressed: () async {
+                                    final productId = product['id'];
+                                    final quantity = 1; // you can allow the user to select the quantity
+
+                                    final url = Uri.parse('http://192.168.1.17:3000/cart');
+                                    final response = await http.post(url, body: {
+                                      'customer_id': customerId.toString(), // use the actual customer ID here
+                                      'product_id': productId.toString(),
+                                      'quantity': quantity.toString(),
+                                    });
+                                    if (response.statusCode == 200) {
+                                      // success, show a snackbar
+                                      cartProducts.add(product);
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text("${product['name']} added to cart"),
+                                          duration: Duration(seconds: 2),
+                                        ),
+                                      );
+                                    } else {
+                                      // error, show an error message
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text("Failed to add ${product['name']} to cart"),
+                                          duration: Duration(seconds: 2),
+                                        ),
+                                      );
+                                    }
                                   },
                                   child: Text(
                                     'Add to cart',
@@ -106,11 +128,12 @@ class CategoryPage extends StatelessWidget {
           } else {
             return Center(child: CircularProgressIndicator());
           }
+
         },
+
       ),
     );
   }
 }
 
 List<Map<String, dynamic>> cartProducts = [];
-

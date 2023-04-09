@@ -1,36 +1,65 @@
 import 'package:flutter/material.dart';
 import 'ProductCatalog.dart';
 import 'cart.dart';
+import 'login.dart';
 import 'main.dart';
 
+
+
 class MyHomePage extends StatefulWidget {
+  final int? customerId;
+
+  MyHomePage({required this.customerId});
+
+
+
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  late int customerId = 0;
   int _selectedIndex = 0;
+  late CartPage _cartPage; // Declare a variable to hold the CartPage instance
 
-  static List<Widget>? _widgetOptions = <Widget>[    ProductCatalog(),    Text(      'Shop',      style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),    ),    CartPage(cartProducts: []),
+  @override
+  void initState() {
+    super.initState();
+    _cartPage = CartPage(customerId: customerId);
+    // Create the CartPage instance in initState()
+  }
+
+  static List<Widget> _widgetOptions = <Widget>[
+    ProductCatalog(),
+    Text(
+      'Shop',
+      style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+    ),
   ];
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
-      if (_selectedIndex == 2) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => CartPage(cartProducts: [])),
-        );
-      }
     });
+  }
+
+  Widget _getSelectedWidget() {
+    switch (_selectedIndex) {
+      case 0:
+      case 1:
+        return _widgetOptions[_selectedIndex];
+      case 2:
+        return CartPage(customerId: widget.customerId); // Pass the customerId to CartPage
+      default:
+        return Container();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('The house coffee shop'),
+        title: Text('Customer ${widget.customerId}'),
         backgroundColor: Colors.black,
         actions: <Widget>[
           IconButton(
@@ -41,8 +70,14 @@ class _MyHomePageState extends State<MyHomePage> {
             backgroundImage: AssetImage('logo.png'),
             child: PopupMenuButton<String>(
               onSelected: (String choice) {
-                // Perform action based on the choice
+                if (choice == 'connection') {
+                  Navigator.pushNamed(context, '/login'); // Navigate to the LoginPage
+                }
+                if (choice == 'registration') {
+                  Navigator.pushNamed(context, '/registration'); // Navigate to the LoginPage
+                }
               },
+
               itemBuilder: (BuildContext context) {
                 return [
                   PopupMenuItem<String>(
@@ -54,12 +89,14 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: Text('Connection'),
                   ),
                   PopupMenuItem<String>(
-                    value: 'settings',
-                    child: Text('Settings'),
+                    value: 'registration',
+                    child: Text('registration'),
                   ),
                 ];
               },
             ),
+
+
           ),
         ],
         bottom: PreferredSize(
@@ -77,7 +114,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
       ),
-      body: _widgetOptions![_selectedIndex],
+      body: _getSelectedWidget(), // Use a helper function to determine the selected widget
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
