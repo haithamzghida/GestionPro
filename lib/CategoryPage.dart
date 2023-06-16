@@ -5,7 +5,7 @@ import 'dart:convert';
 
 
 Future<List<dynamic>> fetchCategoryProducts(int categoryId) async {
-  final response = await http.get(Uri.parse('http://192.168.1.17:3000/products/category/$categoryId'));
+  final response = await http.get(Uri.parse('http://localhost:3000/products/category/$categoryId'));
   final data = json.decode(response.body);
   return data['products'];
 }
@@ -79,7 +79,7 @@ class CategoryPage extends StatelessWidget {
                                     final productId = product['id'];
                                     final quantity = 1; // you can allow the user to select the quantity
 
-                                    final url = Uri.parse('http://192.168.1.17:3000/cart');
+                                    final url = Uri.parse('http://localhost:3000/cart');
                                     final response = await http.post(url, body: {
                                       'customer_id': customerId.toString(), // use the actual customer ID here
                                       'product_id': productId.toString(),

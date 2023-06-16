@@ -5,6 +5,8 @@ import 'home_page.dart';
 import 'login.dart';
 import 'splash_screen.dart';
 import 'dart:math';
+import 'package:flutter/material.dart';
+
 
 void main() {
   runApp(MyApp());
@@ -25,6 +27,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-
-

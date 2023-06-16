@@ -16,7 +16,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       // Send the registration request to the server
-      final response = await http.post(Uri.parse('http://192.168.1.17:3000/customers'),
+      final response = await http.post(Uri.parse('http://localhost:3000/customers'),
           body: {'full_name': _fullName, 'email': _email, 'password': _password});
 
       // Check the response status code and update the UI accordingly
@@ -59,126 +59,125 @@ class _RegistrationPageState extends State<RegistrationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-      decoration: BoxDecoration(
-      gradient: LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [
-        Color(0xFF00A5FF),
-        Color(0xFF0077FF),
-      ],
-    ),
-    ),
-    child: Center(
-    child: SingleChildScrollView(
-    child: Column(
-    mainAxisAlignment: MainAxisAlignment.center,
-    crossAxisAlignment: CrossAxisAlignment.center,
-    children: [
-    Icon(
-    Icons.person_add,
-    size: 150,
-    ),
-    SizedBox(height: 30),
-    Padding(
-    padding: const EdgeInsets.all(16.0),
-    child: Form(
-    key: _formKey,
-    child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-    TextFormField(
-    decoration: InputDecoration(
-    labelText: 'Full Name',
-    labelStyle: TextStyle(
-    color: Colors.white,
-    fontSize: 18,
-    ),
-    ),
-    style: TextStyle(
-    color: Colors.white,
-    fontSize: 18,
-    ),
-    validator: (value) {
-    if (value == null || value.isEmpty) {
-    return 'Please enter your full name';
-    }
-    return null;
-    },
-    onChanged: (value) {
-    _fullName = value;
-    },
-    ),
-    SizedBox(height: 20),
-    TextFormField(
-    decoration: InputDecoration(
-    labelText: 'Email',
-    labelStyle: TextStyle(
-    color: Colors.white,
-    fontSize: 18,
-    ),
-    ),
-    style: TextStyle(
-    color: Colors.white,
-    fontSize: 18,
-    ),
-    validator: (value) {
-    if (value == null || value.isEmpty) {
-    return 'Please enter your email';
-    }
-    return null;
-    },
-    onChanged
-        : (value) {
-      _email = value;
-    },
-    ),
-      SizedBox(height: 20),
-      TextFormField(
-        obscureText: true,
-        decoration: InputDecoration(
-          labelText: 'Password',
-          labelStyle: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF00A5FF),
+              Color(0xFF0077FF),
+            ],
           ),
         ),
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 18,
-        ),
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return 'Please enter a password';
-          }
-          return null;
-        },
-        onChanged: (value) {
-          _password = value;
-        },
-      ),
-      SizedBox(height: 40),
-      SizedBox(
-        width: double.infinity,
-        height: 50,
-        child: ElevatedButton(
-          onPressed: _submitForm,
-          child: Text(
-            'Register',
-            style: TextStyle(fontSize: 18),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.person_add,
+                  size: 150,
+                ),
+                SizedBox(height: 30),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextFormField(
+                          decoration: InputDecoration(
+                            labelText: 'Full Name',
+                            labelStyle: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                            ),
+                          ),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter your full name';
+                            }
+                            return null;
+                          },
+                          onChanged: (value) {
+                            _fullName = value;
+                          },
+                        ),
+                        SizedBox(height: 20),
+                        TextFormField(
+                          decoration: InputDecoration(
+                            labelText: 'Email',
+                            labelStyle: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                            ),
+                          ),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter your email';
+                            }
+                            return null;
+                          },
+                          onChanged
+                              : (value) {
+                            _email = value;
+                          },
+                        ),
+                        SizedBox(height: 20),
+                        TextFormField(
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            labelText: 'Password',
+                            labelStyle: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                            ),
+                          ),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a password';
+                            }
+                            return null;
+                          },
+                          onChanged: (value) {
+                            _password = value;
+                          },
+                        ),
+                        SizedBox(height: 40),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: _submitForm,
+                            child: Text(
+                              'Register',
+                              style: TextStyle(fontSize: 18),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    ],
-    ),
-    ),
-    ),
-    ],
-    ),
-    ),
-    ),
       ),
     );
   }
 }
-

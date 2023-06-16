@@ -17,7 +17,7 @@ class _LoginPageState extends State<LoginPage> {
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       // Send the login request to the server
-      final response = await http.post(Uri.parse('http://192.168.1.17:3000/login'),
+      final response = await http.post(Uri.parse('http://localhost:3000/login'),
           body: {'email': _email, 'password': _password});
 
       // Check the response status code and update the UI accordingly
