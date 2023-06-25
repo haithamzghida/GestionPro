@@ -1,30 +1,42 @@
 import 'home_page.dart';
 import 'main.dart';
 import 'package:flutter/material.dart';
+
 class SplashScreenPage extends StatefulWidget {
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
+
 class _SplashScreenState extends State<SplashScreenPage>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
+  late Animation<double> _textAnimation;
+
   @override
   void initState() {
     super.initState();
     _controller =
         AnimationController(vsync: this, duration: Duration(seconds: 2));
     _animation = Tween<double>(begin: 0, end: 1).animate(_controller);
+    _textAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Interval(0.5, 1.0, curve: Curves.easeInOut),
+      ),
+    );
     _controller.forward().then((value) {
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => MyHomePage(customerId: 0,)));
+          context, MaterialPageRoute(builder: (context) => MyHomePage(customerId: 0)));
     });
   }
+
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,12 +59,23 @@ class _SplashScreenState extends State<SplashScreenPage>
               },
             ),
             SizedBox(height: 20),
-            Text(
-              'The House Coffee Shop',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+            AnimatedBuilder(
+              animation: _textAnimation,
+              builder: (BuildContext context, Widget? child) {
+                final textLength = 'The House Coffee Shop'.length;
+                final currentLength = (_textAnimation.value * textLength).floor();
+                final text = 'The House Coffee Shop'.substring(0, currentLength);
+                return Opacity(
+                  opacity: _textAnimation.value,
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                );
+              },
             ),
             SizedBox(height: 20),
           ],

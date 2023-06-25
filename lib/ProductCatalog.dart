@@ -38,10 +38,9 @@ class _ProductCatalogState extends State<ProductCatalog> {
       child: Container(
       constraints: BoxConstraints(maxWidth: 1200),
       child: CarouselSlider.builder(
-        itemCount: 4,
+        itemCount: 3,
         itemBuilder: (BuildContext context, int index, int realIndex) {
           List<String> images = [
-            'https://img.freepik.com/photos-premium/cafe-internet-modele-promotion-medias-sociaux-publicite-banniere-publicitaire-marketing-produit-eps-10_182292-232.jpg?w=1060',
             'assets/HR.png',
             'assets/vape.png',
             'assets/vector.jpg',

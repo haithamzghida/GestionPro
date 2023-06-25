@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'ProductCatalog.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
+import 'about.dart';
 
 Future<List<dynamic>> fetchCategoryProducts(int categoryId) async {
   final response = await http.get(Uri.parse('http://localhost:3000/products/category/$categoryId'));

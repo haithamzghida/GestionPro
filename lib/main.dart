@@ -6,6 +6,7 @@ import 'login.dart';
 import 'splash_screen.dart';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'about.dart';
 
 
 void main() {
@@ -23,6 +24,7 @@ class MyApp extends StatelessWidget {
 
         '/login': (context) => LoginPage(), // Define a route for LoginPage
         '/registration' : (context) => RegistrationPage(),
+        '/about' : (context) => AboutPage(),
       },
     );
   }
