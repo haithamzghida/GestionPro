@@ -8,6 +8,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'about.dart';
 import 'first.dart';
+import 'contact.dart';
 
 
 void main() {
@@ -19,7 +20,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'The house coffee shop',
-      home: SplashScreenPage(),
+      home: First(),
       initialRoute: '/',
       routes: {
 
@@ -27,6 +28,7 @@ class MyApp extends StatelessWidget {
         '/registration' : (context) => RegistrationPage(),
         '/about' : (context) => AboutPage(),
         '/first' : (context) => First(),
+        '/contact' : (context) => ContactPage(),
       },
     );
   }

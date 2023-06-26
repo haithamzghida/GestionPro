@@ -1,13 +1,18 @@
+import 'home_page.dart';
 import 'package:flutter/material.dart';
+import 'splash_screen.dart';
+
 class First extends StatefulWidget {
   @override
   _FirstState createState() => _FirstState();
 }
+
 class _FirstState extends State<First> {
   double opacity1 = 1.0;
   double opacity2 = 1.0;
   double opacity3 = 1.0;
-  double opacity4 = 1.0;
+  double opacity4 = 1.0; 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,6 +51,13 @@ class _FirstState extends State<First> {
                   icon: Icons.apps,
                   text: 'Application Vitrine',
                   opacity: opacity1,
+                  onTap: () {
+                    // Navigate to splash_screen.dart when the button is clicked
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => SplashScreenPage()),
+                    );
+                  },
                   onEnter: () {
                     setState(() {
                       opacity1 = 0.5;
@@ -71,7 +83,7 @@ class _FirstState extends State<First> {
                     setState(() {
                       opacity2 = 1.0;
                     });
-                  },
+                  }, onTap: () {  },
                 ),
                 buildHoverContainer(
                   color: Colors.orange,
@@ -87,7 +99,7 @@ class _FirstState extends State<First> {
                     setState(() {
                       opacity3 = 1.0;
                     });
-                  },
+                  }, onTap: () {  },
                 ),
                 buildHoverContainer(
                   color: Colors.purple,
@@ -103,59 +115,65 @@ class _FirstState extends State<First> {
                     setState(() {
                       opacity4 = 1.0;
                     });
-                  },
+                  }, onTap: () {  },
                 ),
               ],
+
             ),
           ],
         ),
       ),
     );
   }
+
   Widget buildHoverContainer({
     required Color color,
     required IconData icon,
     required String text,
     required double opacity,
+    required Function() onTap,
     required Function() onEnter,
     required Function() onExit,
   }) {
-    return MouseRegion(
-      child: AnimatedOpacity(
-        duration: Duration(milliseconds: 300),
-        opacity: opacity,
-        child: Container(
-          width: 180,
-          height: 180,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                color: Colors.white,
-                size: 70,
-              ),
-              SizedBox(height: 10),
-              Text(
-                text,
-                style: TextStyle(
+    return GestureDetector(
+      onTap: onTap,
+      child: MouseRegion(
+        child: AnimatedOpacity(
+          duration: Duration(milliseconds: 300),
+          opacity: opacity,
+          child: Container(
+            width: 180,
+            height: 180,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
                   color: Colors.white,
+                  size: 70,
                 ),
-              ),
-            ],
+                SizedBox(height: 10),
+                Text(
+                  text,
+                  style: TextStyle(
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
+        onEnter: (event) {
+          onEnter();
+        },
+        onExit: (event) {
+          onExit();
+        },
       ),
-      onEnter: (event) {
-        onEnter();
-      },
-      onExit: (event) {
-        onExit();
-      },
     );
   }
 }

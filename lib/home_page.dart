@@ -14,20 +14,16 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   late int customerId = 0;
   int _selectedIndex = 0;
-  late CartPage _cartPage; // Declare a variable to hold the CartPage instance
-  // Add a new variable to hold the menu options
+  late CartPage _cartPage;
   List<String> _menuOptions = [
     'Profile',
     'Connection',
     'Registration',
-    'About Us',
-    'Contact'
   ];
   @override
   void initState() {
     super.initState();
     _cartPage = CartPage(customerId: customerId);
-    // Create the CartPage instance in initState()
   }
   static List<Widget> _widgetOptions = <Widget>[
     ProductCatalog(),
@@ -41,24 +37,15 @@ class _MyHomePageState extends State<MyHomePage> {
       _selectedIndex = index;
     });
   }
-  // Add a new method to handle the selection of menu options
   void _onMenuOptionSelected(String option) {
     switch (option) {
       case 'Profile':
-      // Navigate to the ProfilePage
         break;
       case 'Connection':
-        Navigator.pushNamed(context, '/login'); // Navigate to the LoginPage
+        Navigator.pushNamed(context, '/login');
         break;
       case 'Registration':
-        Navigator.pushNamed(context, '/registration'); // Navigate to the RegistrationPage
-        break;
-      case 'About Us':
-      // Show the AboutUsPage
-        Navigator.pushNamed(context, '/about');
-        break;
-      case 'Contact':
-      // Show the ContactPage
+        Navigator.pushNamed(context, '/registration');
         break;
     }
   }
@@ -70,7 +57,7 @@ class _MyHomePageState extends State<MyHomePage> {
       case 2:
         return CartPage(customerId: widget.customerId);
       case 3:
-        return InventoryPage(); // Add a case for index 3 to return the InventoryPage
+        return InventoryPage();
       default:
         return Container();
     }
@@ -87,7 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
             onPressed: () {},
           ),
           CircleAvatar(
-            backgroundImage: AssetImage('logo.png'),
+            backgroundImage: AssetImage('assets/logo.png'),
             child: PopupMenuButton<String>(
               onSelected: _onMenuOptionSelected,
               itemBuilder: (BuildContext context) {
@@ -121,28 +108,29 @@ class _MyHomePageState extends State<MyHomePage> {
           padding: EdgeInsets.zero,
           children: <Widget>[
             DrawerHeader(
-              child: Text('Menu'),
+              child: Image.asset('assets/vape.png'),
               decoration: BoxDecoration(
                 color: Colors.black,
               ),
             ),
             ListTile(
+              leading: Icon(Icons.info),
               title: Text('About Us'),
               onTap: () {
-                // Show the AboutUsPage
                 Navigator.pushNamed(context, '/about');
               },
             ),
             ListTile(
+              leading: Icon(Icons.contact_mail),
               title: Text('Contact'),
               onTap: () {
-                // Show the ContactPage
+                Navigator.pushNamed(context, '/contact');
               },
             ),
           ],
         ),
       ),
-      body: _getSelectedWidget(), // Use a helper function to determine the selected widget
+      body: _getSelectedWidget(),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
