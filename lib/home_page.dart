@@ -5,6 +5,7 @@ import 'cart.dart';
 import 'login.dart';
 import 'main.dart';
 import 'about.dart';
+import 'myprofile.dart';
 class MyHomePage extends StatefulWidget {
   final int? customerId;
   MyHomePage({required this.customerId});
@@ -40,6 +41,12 @@ class _MyHomePageState extends State<MyHomePage> {
   void _onMenuOptionSelected(String option) {
     switch (option) {
       case 'Profile':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MyProfile(customerId: widget.customerId),
+          ),
+        );
         break;
       case 'Connection':
         Navigator.pushNamed(context, '/login');

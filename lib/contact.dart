@@ -1,4 +1,22 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+Future<void> sendEmail(String name, String email, String message) async {
+  final response = await http.post(
+    Uri.parse('http://localhost:3000/sendmail'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'name': name,
+      'email': email,
+      'message': message,
+    }),
+  );
+  if (response.statusCode == 200) {
+    print('Email sent successfully');
+  } else {
+    print('Error sending email');
+  }
+}
 void main() {
   runApp(MyApp());
 }
@@ -16,11 +34,16 @@ class ContactPage extends StatefulWidget {
 }
 class _ContactPageState extends State<ContactPage> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  bool _subscribe = false;
+  final _messageController = TextEditingController();
+  final _newsletterEmailController = TextEditingController();
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
+    _messageController.dispose();
+    _newsletterEmailController.dispose();
     super.dispose();
   }
   @override
@@ -53,6 +76,7 @@ class _ContactPageState extends State<ContactPage> {
               ),
               SizedBox(height: 16.0),
               TextFormField(
+                controller: _nameController,
                 decoration: InputDecoration(
                   labelText: 'Name',
                   labelStyle: TextStyle(color: Colors.black),
@@ -92,6 +116,7 @@ class _ContactPageState extends State<ContactPage> {
               ),
               SizedBox(height: 16.0),
               TextFormField(
+                controller: _messageController,
                 decoration: InputDecoration(
                   labelText: 'Message',
                   labelStyle: TextStyle(color: Colors.black),
@@ -115,6 +140,7 @@ class _ContactPageState extends State<ContactPage> {
                 onPressed: () {
                   if (_formKey.currentState?.validate() ?? false) {
                     // Submit the form
+                    sendEmail(_nameController.text, _emailController.text, _messageController.text);
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text(
                           'You can subscribe to the news to receive all discounts and news.'),
@@ -138,7 +164,7 @@ class _ContactPageState extends State<ContactPage> {
                 children: [
                   Expanded(
                     child: TextFormField(
-                      controller: _emailController,
+                      controller: _newsletterEmailController,
                       decoration: InputDecoration(
                         labelText: 'Enter your email',
                         labelStyle: TextStyle(color: Colors.black),
@@ -154,7 +180,7 @@ class _ContactPageState extends State<ContactPage> {
                   SizedBox(width: 16.0),
                   ElevatedButton(
                     onPressed: () {
-                      if (_emailController.text.isNotEmpty) {
+                      if (_newsletterEmailController.text.isNotEmpty) {
                         // Send newsletter to email
                       }
                     },
