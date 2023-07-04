@@ -34,38 +34,38 @@ class _ProductCatalogState extends State<ProductCatalog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-      Center(
-      child: Container(
-      constraints: BoxConstraints(maxWidth: 1200),
-      child: CarouselSlider.builder(
-        itemCount: 3,
-        itemBuilder: (BuildContext context, int index, int realIndex) {
-          List<String> images = [
-            'assets/HR.png',
-            'assets/vape.png',
-            'assets/vector.jpg',
-          ];
-          final image = images[index];
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                image,
-                fit: BoxFit.cover,
-                width: double.infinity,
+          Center(
+            child: Container(
+              constraints: BoxConstraints(maxWidth: 1200),
+              child: CarouselSlider.builder(
+                itemCount: 3,
+                itemBuilder: (BuildContext context, int index, int realIndex) {
+                  List<String> images = [
+                    'assets/HR.png',
+                    'assets/vape.png',
+                    'assets/vector.jpg',
+                  ];
+                  final image = images[index];
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        image,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                      ),
+                    ],
+                  );
+                },
+                options: CarouselOptions(
+                  autoPlay: true,
+                  enlargeCenterPage: true,
+                  aspectRatio: 1.4,
+                  viewportFraction: 0.6, // change the viewportFraction value to make the images smaller
+                ),
               ),
-            ],
-          );
-        },
-        options: CarouselOptions(
-          autoPlay: true,
-          enlargeCenterPage: true,
-          aspectRatio: 1.4,
-          viewportFraction: 0.6, // change the viewportFraction value to make the images smaller
-        ),
-      ),
-    ),
-    ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.only(left: 20, top: 20, bottom: 20),
             child: Text(
