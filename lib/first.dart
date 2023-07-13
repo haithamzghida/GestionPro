@@ -1,3 +1,5 @@
+import 'CashierPage.dart';
+import 'Inventory.dart';
 import 'home_page.dart';
 import 'package:flutter/material.dart';
 import 'splash_screen.dart';
@@ -83,7 +85,13 @@ class _FirstState extends State<First> {
                     setState(() {
                       opacity2 = 1.0;
                     });
-                  }, onTap: () {  },
+                  },  onTap: () {
+                  // Navigate to splash_screen.dart when the button is clicked
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => CashierPage()),
+                  );
+                },
                 ),
                 buildHoverContainer(
                   color: Colors.orange,
@@ -99,7 +107,13 @@ class _FirstState extends State<First> {
                     setState(() {
                       opacity3 = 1.0;
                     });
-                  }, onTap: () {  },
+                  },  onTap: () {
+                  // Navigate to splash_screen.dart when the button is clicked
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => InventoryPage()),
+                  );
+                },
                 ),
                 buildHoverContainer(
                   color: Colors.purple,

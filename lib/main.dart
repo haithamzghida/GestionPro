@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/registration.dart';
+import 'CashierPage.dart';
+import 'CategoryPage.dart';
+import 'Inventory.dart';
 import 'ProductCatalog.dart';
 import 'home_page.dart';
 import 'login.dart';
@@ -29,6 +32,8 @@ class MyApp extends StatelessWidget {
         '/about' : (context) => AboutPage(),
         '/first' : (context) => First(),
         '/contact' : (context) => ContactPage(),
+        '/caisse' : (context) => CashierPage(),
+        '/stock' : (context) => InventoryPage(),
       },
     );
   }
