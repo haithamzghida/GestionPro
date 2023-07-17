@@ -4,66 +4,65 @@ import 'dart:convert';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'CategoryPage.dart';
 import 'main.dart';
+
+
 class ProductCatalog extends StatefulWidget {
   const ProductCatalog({Key? key}) : super(key: key);
+
   @override
   _ProductCatalogState createState() => _ProductCatalogState();
 }
+
 class _ProductCatalogState extends State<ProductCatalog> {
   List<dynamic> products = [];
+
   @override
   void initState() {
     super.initState();
     fetchProducts();
   }
+
   Future<void> fetchProducts() async {
-    final response =
-    await http.get(Uri.parse('http://localhost:3000/products'));
+    final response = await http.get(Uri.parse('http://localhost:3000/products'));
     final data = json.decode(response.body);
     setState(() {
       products = data['products'];
     });
   }
+
   @override
   Widget build(BuildContext context) {
-    var screenSize = MediaQuery.of(context).size;
     var textScaleFactor = MediaQuery.of(context).textScaleFactor;
-    var isLandscape = screenSize.width > screenSize.height;
-    var isTablet = screenSize.shortestSide >= 600;
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Center(
-            child: Container(
-              constraints: BoxConstraints(maxWidth: 1200),
-              child: CarouselSlider.builder(
-                itemCount: 3,
-                itemBuilder: (BuildContext context, int index, int realIndex) {
-                  List<String> images = [
-                    'assets/HR.png',
-                    'assets/vape.png',
-                    'assets/vector.jpg',
-                  ];
-                  final image = images[index];
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.asset(
-                        image,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                      ),
-                    ],
-                  );
-                },
-                options: CarouselOptions(
-                  autoPlay: true,
-                  enlargeCenterPage: true,
-                  aspectRatio: 1.4,
-                  viewportFraction: 0.6, // change the viewportFraction value to make the images smaller
-                ),
-              ),
+          CarouselSlider.builder(
+            itemCount: 3,
+            itemBuilder: (BuildContext context, int index, int realIndex) {
+              List<String> images = [
+                'assets/HR.png',
+                'assets/vape.png',
+                'assets/vector.jpg',
+              ];
+              final image = images[index];
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    image,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                  ),
+                ],
+              );
+            },
+            options: CarouselOptions(
+              autoPlay: true,
+              enlargeCenterPage: true,
+              aspectRatio: 1.4,
+              viewportFraction: 0.6,
             ),
           ),
           Padding(
@@ -76,64 +75,61 @@ class _ProductCatalogState extends State<ProductCatalog> {
               ),
             ),
           ),
-          Container(
-            margin: EdgeInsets.symmetric(horizontal: 20.0),
-            child: GridView.count(
-              crossAxisCount: isTablet ? 4 : 3,
-              childAspectRatio: 1.0,
-              padding: const EdgeInsets.all(4.0),
-              mainAxisSpacing: 7.0,
-              crossAxisSpacing: 7.0,
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              children: <Widget>[
-                CategoryTile(
-                  icon: Icons.local_cafe,
-                  title: 'Café',
-                  id: 1,
-                ),
-                CategoryTile(
-                  icon: Icons.local_drink,
-                  title: 'Thé',
-                  id: 2,
-                ),
-                CategoryTile(
-                  icon: Icons.local_bar,
-                  title: 'Mojito',
-                  id: 3,
-                ),
-                CategoryTile(
-                  icon: Icons.cake,
-                  title: 'Cheesecake',
-                  id: 4,
-                ),
-                CategoryTile(
-                  icon: Icons.icecream,
-                  title: 'Tiramisu',
-                  id: 5,
-                ),
-                CategoryTile(
-                  icon: Icons.local_drink,
-                  title: 'Jus',
-                  id: 6,
-                ),
-                CategoryTile(
-                  icon: Icons.local_bar,
-                  title: 'Frappe',
-                  id: 7,
-                ),
-                CategoryTile(
-                  icon: Icons.smoking_rooms,
-                  title: 'Vape',
-                  id: 8,
-                ),
-                CategoryTile(
-                  icon: Icons.liquor,
-                  title: 'Liquide',
-                  id: 9,
-                ),
-              ],
-            ),
+          GridView.count(
+            crossAxisCount: 3,
+            childAspectRatio: 1.0,
+            padding: const EdgeInsets.all(4.0),
+            mainAxisSpacing: 7.0,
+            crossAxisSpacing: 7.0,
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            children: <Widget>[
+              CategoryTile(
+                icon: Icons.local_cafe,
+                title: 'Café',
+                id: 1,
+              ),
+              CategoryTile(
+                icon: Icons.local_drink,
+                title: 'Thé',
+                id: 2,
+              ),
+              CategoryTile(
+                icon: Icons.local_bar,
+                title: 'Mojito',
+                id: 3,
+              ),
+              CategoryTile(
+                icon: Icons.cake,
+                title: 'Cheesecake',
+                id: 4,
+              ),
+              CategoryTile(
+                icon: Icons.icecream,
+                title: 'Tiramisu',
+                id: 5,
+              ),
+              CategoryTile(
+                icon: Icons.local_drink,
+                title: 'Jus',
+                id: 6,
+              ),
+              CategoryTile(
+                icon: Icons.local_bar,
+                title: 'Frappe',
+                id: 7,
+              ),
+              CategoryTile(
+                icon: Icons.smoking_rooms,
+                title: 'Vape',
+                id: 8,
+              ),
+              CategoryTile(
+                icon: Icons.liquor,
+                title: 'Liquide',
+                id: 9,
+              ),
+            ],
           ),
           Padding(
             padding: const EdgeInsets.only(left: 20, top: 20, bottom: 20),
@@ -147,7 +143,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
           ),
           GridView.builder(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: isTablet ? 4 : 3,
+              crossAxisCount: 3,
               mainAxisSpacing: 4.0,
               crossAxisSpacing: 4.0,
               childAspectRatio: 0.5,
@@ -202,19 +198,23 @@ class _ProductCatalogState extends State<ProductCatalog> {
     );
   }
 }
+
 class CategoryTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final int id;
+
   const CategoryTile({
     Key? key,
     required this.icon,
     required this.title,
     required this.id,
   }) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     var textScaleFactor = MediaQuery.of(context).textScaleFactor;
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
