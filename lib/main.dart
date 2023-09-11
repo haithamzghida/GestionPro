@@ -6,6 +6,7 @@ import 'Inventory.dart';
 import 'ProductCatalog.dart';
 import 'home_page.dart';
 import 'login.dart';
+import 'menu.dart';
 import 'splash_screen.dart';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -33,7 +34,8 @@ class MyApp extends StatelessWidget {
         '/first' : (context) => First(),
         '/contact' : (context) => ContactPage(),
         '/caisse' : (context) => CashierPage(),
-        '/stock' : (context) => InventoryPage(),
+        '/stock' : (context) => InventoryManagementPage(),
+        '/menu' : (context) => MenuTablet(),
       },
     );
   }

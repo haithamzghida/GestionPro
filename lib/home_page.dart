@@ -64,7 +64,7 @@ class _MyHomePageState extends State<MyHomePage> {
       case 2:
         return CartPage(customerId: widget.customerId);
       case 3:
-        return InventoryPage();
+        return InventoryManagementPage();
       default:
         return Container();
     }

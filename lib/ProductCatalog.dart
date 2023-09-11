@@ -5,7 +5,6 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'CategoryPage.dart';
 import 'main.dart';
 
-
 class ProductCatalog extends StatefulWidget {
   const ProductCatalog({Key? key}) : super(key: key);
 
@@ -33,6 +32,8 @@ class _ProductCatalogState extends State<ProductCatalog> {
   @override
   Widget build(BuildContext context) {
     var textScaleFactor = MediaQuery.of(context).textScaleFactor;
+    var screenWidth = MediaQuery.of(context).size.width;
+    var crossAxisCount = screenWidth < 600 ? 2 : 3; // Adjust the breakpoint as needed
 
     return SingleChildScrollView(
       child: Column(
@@ -76,7 +77,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
             ),
           ),
           GridView.count(
-            crossAxisCount: 3,
+            crossAxisCount: 5,
             childAspectRatio: 1.0,
             padding: const EdgeInsets.all(4.0),
             mainAxisSpacing: 7.0,
@@ -85,52 +86,53 @@ class _ProductCatalogState extends State<ProductCatalog> {
             physics: NeverScrollableScrollPhysics(),
             children: <Widget>[
               CategoryTile(
-                icon: Icons.local_cafe,
+                imageUrl: 'assets/coffee.png',
                 title: 'Café',
                 id: 1,
               ),
               CategoryTile(
-                icon: Icons.local_drink,
-                title: 'Thé',
+                imageUrl: 'assets/Cookies.png',
+                title: 'Chocolat Chaud',
                 id: 2,
               ),
               CategoryTile(
-                icon: Icons.local_bar,
-                title: 'Mojito',
+                imageUrl: 'assets/Chocolat glacée.png',
+                title: 'Chocolat glacée',
                 id: 3,
               ),
               CategoryTile(
-                icon: Icons.cake,
-                title: 'Cheesecake',
+                imageUrl: 'assets/ice.png',
+                title: 'Ice coffee',
                 id: 4,
               ),
               CategoryTile(
-                icon: Icons.icecream,
+                imageUrl: 'assets/Tiramisu.png',
                 title: 'Tiramisu',
                 id: 5,
               ),
               CategoryTile(
-                icon: Icons.local_drink,
-                title: 'Jus',
+                imageUrl: 'assets/the.png',
+                title: 'Thé',
                 id: 6,
               ),
               CategoryTile(
-                icon: Icons.local_bar,
-                title: 'Frappe',
+                imageUrl: 'assets/jus.png',
+                title: 'Jus',
                 id: 7,
               ),
               CategoryTile(
-                icon: Icons.smoking_rooms,
-                title: 'Vape',
+                imageUrl: 'assets/mojito.png',
+                title: 'mojito',
                 id: 8,
               ),
               CategoryTile(
-                icon: Icons.liquor,
-                title: 'Liquide',
+                imageUrl: 'cocafanta.png',
+                title: 'Soda',
                 id: 9,
               ),
             ],
           ),
+
           Padding(
             padding: const EdgeInsets.only(left: 20, top: 20, bottom: 20),
             child: Text(
@@ -143,10 +145,10 @@ class _ProductCatalogState extends State<ProductCatalog> {
           ),
           GridView.builder(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
+              crossAxisCount: 4,
               mainAxisSpacing: 4.0,
               crossAxisSpacing: 4.0,
-              childAspectRatio: 0.5,
+              childAspectRatio: 0.7,
             ),
             itemCount: products.length,
             shrinkWrap: true,
@@ -200,13 +202,13 @@ class _ProductCatalogState extends State<ProductCatalog> {
 }
 
 class CategoryTile extends StatelessWidget {
-  final IconData icon;
+  final String imageUrl;
   final String title;
   final int id;
 
   const CategoryTile({
     Key? key,
-    required this.icon,
+    required this.imageUrl,
     required this.title,
     required this.id,
   }) : super(key: key);
@@ -236,7 +238,11 @@ class CategoryTile extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 50),
+            Image.network(
+              imageUrl,
+              width: 90,
+              height: 90,
+            ),
             SizedBox(height: 10),
             Text(
               title,

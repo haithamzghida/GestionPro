@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() {
   runApp(TailwindPOSApp());
@@ -19,6 +21,14 @@ class TailwindPOSApp extends StatelessWidget {
   }
 }
 
+class OrderItem {
+  final Product product;
+  int quantity;
+
+  OrderItem({required this.product, required this.quantity});
+}
+
+
 class CashierPage extends StatefulWidget {
   @override
   _CashierPageState createState() => _CashierPageState();
@@ -31,83 +41,44 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
   String? _selectedEmployee;
   String _pinCode = '';
   List<Bill> _bills = [];
-  List<String> _orderItems = [];
-  String _selectedCategory = 'café';
 
-  List<Product> _getProductsByCategory(String category) {
-    // Implement your logic to retrieve products based on the selected category
-    // Return a list of products for the given category
-    // Example implementation:
-    if (category == 'café') {
-      return [
-        Product(name: 'Express', price: 2000, imageUrl:'assets/Express.png'),
-        Product(name: 'American', price: 2600, imageUrl: 'assets/American.png'),
-        Product(name: 'Grand tasse', price: 2900, imageUrl: 'assets/Grand tasse.png'),
-        Product(name: 'Café crème', price: 3000, imageUrl: 'assets/Café crème.png'),
-        Product(name: 'Capuccino', price: 5500, imageUrl: 'assets/Capuccino.png'),
-        Product(name: 'chocolat aux lait', price: 2800, imageUrl: 'assets/chocolat aux lait.png'),
+  List<OrderItem> _selectedProducts = [];
+  int _selectedCategory = 1;
+  List<Map<String, dynamic>> _categories = [];
+  Map<String, int> _productQuantities = {};
 
-      ];
-    } else if (category == 'Chocolat Chaud') {
-      return [
-        Product(name: 'Normal', price: 5000, imageUrl: 'assets/Normal.png'),
-        Product(name: 'Fruit sec', price: 6000, imageUrl: 'assets/Fruit sec.png'),
-        Product(name: 'Banane', price: 6000, imageUrl: 'assets/Banane.png'),
-        Product(name: 'Nutella', price: 6500, imageUrl: 'assets/Nutella.png'),
-        Product(name: 'The house', price: 9000, imageUrl: 'assets/The house.png'),
-      ];
-    }else if (category == 'Chocolat glacée') {
-      return [
-        Product(name: 'Chocolat glacée', price: 5000, imageUrl: 'assets/Chocolat glacée.png'),
-      ];
-    }else if (category == 'Ice coffee') {
-      return [
-        Product(name: 'Noisette', price: 5000, imageUrl: 'assets/Noisette.png'),
-        Product(name: 'Cookies', price: 5000, imageUrl: 'assets/Cookies.png'),
-        Product(name: 'Cramel', price: 5000, imageUrl: 'assets/Cramel.png'),
-        Product(name: 'Vanille', price: 5000, imageUrl: 'assets/Vanille.png'),
-        Product(name: 'Chckolat', price: 5000, imageUrl: 'assets/Chckolat.png'),
-        Product(name: 'Brownies', price: 5000, imageUrl: 'assets/Brownies.png'),
-      ];
-    }else if (category == 'Eau minérale') {
-      return [
-        Product(name: 'Eau minérale 0.5 L', price: 1000, imageUrl: 'assets/Eau minérale 0.5 L.png'),
-        Product(name: 'Eau minérale 1 L', price: 1800, imageUrl: 'assets/Eau minérale 1 L.png'),
-      ];
-    }else if (category == 'Thé') {
-      return [
-        Product(name: 'Thé', price: 1800, imageUrl: 'assets/The.png'),
-        Product(name: 'Thé à la menthe', price: 2000, imageUrl: 'assets/Thé à la menthe.png'),
-      ];
-    }else if (category == 'Jus') {
-      return [
-        Product(name: 'Orange', price: 4000, imageUrl: 'assets/Orange.png'),
-        Product(name: 'Citron', price: 4000, imageUrl: 'assets/Citron.png'),
-        Product(name: 'Banane', price: 5500, imageUrl: 'assets/Banane.png'),
-        Product(name: 'Fraise', price: 5500, imageUrl: 'assets/Fraise.png'),
-        Product(name: 'Fruit', price: 6000, imageUrl: 'assets/Fruit.png'),
-        Product(name: 'The house', price: 9000, imageUrl: 'assets/The house.png'),
-      ];
-    }else if (category == 'Mojito') {
-      return [
-        Product(name: 'Citron', price: 5000, imageUrl: 'assets/m-Citron.png'),
-        Product(name: 'Blue', price: 5500, imageUrl: 'assets/Blue.png'),
-        Product(name: 'Pomme', price: 5500, imageUrl: 'assets/Pomme.png'),
-        Product(name: 'Fraise', price: 5500, imageUrl: 'assets/m-Fraise.png'),
-        Product(name: 'Ananas', price: 5500, imageUrl: 'assets/Ananas.png'),
-        Product(name: 'Grenadine', price: 6000, imageUrl: 'assets/Grenadine.png'),
-        Product(name: 'Energétique', price: 6500, imageUrl: 'assets/Energétique.png'),
-      ];
-    }else if (category == 'Boisson') {
-      return [
-        Product(name: 'coca/fanta ...', price: 2500, imageUrl: 'assets/cocafanta.png'),
-        Product(name: 'Enargitique', price: 5000, imageUrl: 'assets/Energetique.png'),
-      ];
+  Future<List<Product>> _fetchProductsByCategory(int categoryId) async {
+    final response = await http.get(Uri.parse('http://localhost:3000/products/category/$categoryId'));
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> jsonResponse = json.decode(response.body);
+
+      if (jsonResponse.containsKey('products')) {
+        final List<dynamic> productsJson = jsonResponse['products'];
+        List<Product> products = productsJson.map((productJson) {
+          return Product(
+            name: productJson['name'] ?? '', // Provide default value for 'name'
+            price: (productJson['price'] ?? 0).toString(), // Provide default value for 'price'
+            imageUrl: (productJson['image_url'] ?? 'assets/Express.png').toString(),
+
+          );
+        }).toList();
+
+        return products;
+      } else {
+        // Handle the case where 'products' key is not present in the response
+        throw Exception('Products key not found in response');
+      }
+    } else {
+      throw Exception('Failed to fetch products');
     }
-
-    // Return an empty list if the category is not found
-    return [];
   }
+
+
+
+
+
+
 
   final List<String> employeeNames = ['Haitham', 'Mhamed', 'Folan Folani'];
 
@@ -117,8 +88,10 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance!.addPostFrameCallback((_) {
       _showEmployeeSelection();
+      fetchCategories();
     });
 
 
@@ -131,6 +104,36 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
       curve: Curves.easeInOut,
     );
   }
+  Future<void> fetchCategories() async {
+    List<Map<String, dynamic>> categoryInfoList = await _fetchCategories();
+    setState(() {
+      _categories = categoryInfoList;
+    });
+  }
+
+
+  // Fetch categories from the Node.js backend
+  Future<List<Map<String, dynamic>>> _fetchCategories() async {
+    final response = await http.get(Uri.parse('http://localhost:3000/categories'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> categories = json.decode(response.body)['categories'];
+
+      List<Map<String, dynamic>> categoryInfoList = categories.map((category) {
+        return {
+          'id': category['id'],
+          'name': category['name'],
+        };
+      }).toList();
+
+      return categoryInfoList;
+    } else {
+      // Handle error here
+      print('Error fetching categories: ${response.statusCode}');
+      throw Exception('Failed to fetch categories');
+    }
+  }
+
 
   void _showEmployeeSelection() {
     showDialog(
@@ -345,45 +348,77 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
   }
 
   // Method to handle adding an item to the total amount
-  void _addItem(int amount) {
+  void _addItem(Product product) {
     setState(() {
-      _totalAmount += amount;
+      _totalAmount += int.parse(product.price);
+
+      int index = _selectedProducts.indexWhere((item) => item.product.name == product.name);
+
+      if (index != -1) {
+        _selectedProducts[index].quantity++;
+      } else {
+        _selectedProducts.add(OrderItem(product: product, quantity: 1));
+      }
+
+      // Update product quantities map
+      _productQuantities[product.name] = (_productQuantities[product.name] ?? 0) + 1;
     });
   }
 
-  // Method to handle subtracting an item from the total amount
-  void _subtractItem(int amount) {
+  void _subtractItem(OrderItem orderItem) {
     setState(() {
-      _totalAmount -= amount;
+      _totalAmount -= int.parse(orderItem.product.price);
+      orderItem.quantity--;
+
+      if (orderItem.quantity == 0) {
+        _selectedProducts.remove(orderItem);
+      }
+
+      // Update product quantities map
+      _productQuantities[orderItem.product.name] = (_productQuantities[orderItem.product.name] ?? 0) - 1;
     });
   }
+
+
 
   // Method to create a new bill
   void _createBill() {
     if (_selectedEmployee != null && _totalAmount > 0) {
-      List<String> selectedProducts = _orderItems.toList();
-      // Add the selected products to the bill
-      // You can replace this with your logic to add the selected products
+      List<String> selectedProducts = [];
+      int totalBillAmount = 0; // Initialize the total bill amount
 
-      Bill bill = Bill(
-        serverName: _selectedEmployee!,
-        dateTime: DateTime.now(),
-        tableNumber: _selectedTable,
-        products: selectedProducts,
-        title: 'The House Coffee Shop',
-        welcomeText: 'Welcome',
-        footerText: 'We hope to see you again!',
-      );
-
-      setState(() {
-        _bills.add(bill);
-        _orderItems.clear();
+      // Add the selected products with quantities and prices to the bill
+      _selectedProducts.forEach((orderItem) {
+        int itemTotal = int.parse(orderItem.product.price) * orderItem.quantity;
+        totalBillAmount += itemTotal; // Increment the total bill amount
+        selectedProducts.add('${orderItem.product.name} (x${orderItem.quantity}) - \$${itemTotal}');
       });
 
-      // Reset the total amount and selected products
-      _totalAmount = 0;
+      if (selectedProducts.isNotEmpty) {
+        Bill bill = Bill(
+          serverName: _selectedEmployee!,
+          dateTime: DateTime.now(),
+          tableNumber: _selectedTable,
+          products: selectedProducts,
+          title: 'The House Coffee Shop',
+          welcomeText: 'Welcome',
+          footerText: 'We hope to see you again!',
+          totalAmount: totalBillAmount, // Pass the total bill amount to the Bill object
+        );
+
+        setState(() {
+          _bills.add(bill);
+          _selectedProducts.clear(); // Clear the selected products list
+          _productQuantities.clear(); // Clear the product quantities map
+        });
+
+        // Reset the total amount
+        _totalAmount = 0;
+      }
     }
   }
+
+
 
   // Method to print a bill
   void _printBill(Bill bill) {
@@ -427,19 +462,14 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildProductItem(String name, int price, String imageUrl) {
+  Widget _buildProductItem(Product product, int selectedQuantity) {
     return InkWell(
       onTap: () {
-        setState(() {
-          _orderItems.add(name);
-          _addItem(price);
-        });
+        _addItem(product);
       },
       onLongPress: () {
-        setState(() {
-          _orderItems.remove(name);
-          _subtractItem(price);
-        });
+        OrderItem orderItem = _selectedProducts.firstWhere((item) => item.product.name == product.name);
+        _subtractItem(orderItem);
       },
       child: Card(
         elevation: 2,
@@ -453,13 +483,13 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.network(
-              imageUrl,
+            Image.asset(
+              product.imageUrl,
               height: 80,
             ),
             SizedBox(height: 8),
             Text(
-              name,
+              product.name,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -467,17 +497,35 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
             ),
             SizedBox(height: 4),
             Text(
-              '\$$price',
+              '\$${product.price}',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],
               ),
             ),
+            SizedBox(height: 4),
+            Text(
+              'Quantity: $selectedQuantity', // Display product quantity
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[400],
+              ),
+            ),
+            if (selectedQuantity > 0)
+              IconButton(
+                icon: Icon(Icons.delete),
+                onPressed: () {
+                  OrderItem orderItem = _selectedProducts.firstWhere((item) => item.product.name == product.name);
+                  _subtractItem(orderItem);
+                },
+              ),
           ],
         ),
       ),
     );
   }
+
+
 
   Widget _buildBillItem(Bill bill) {
     return Card(
@@ -490,6 +538,11 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
             Text(
               bill.title,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+
+            Text(
+              'Welcome',
+              style: TextStyle(fontSize: 16),
             ),
             SizedBox(height: 8),
             Text(
@@ -519,16 +572,20 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
                   ),
               ],
             ),
-            SizedBox(height: 8),
+            SizedBox(height: 16),
             Text(
-              bill.welcomeText,
+              'Total: \$${bill.totalAmount}', // Display total amount
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8), // Add some spacing
+            Text(
+              'we hope you enjoyed the service',
               style: TextStyle(fontSize: 16),
             ),
-            SizedBox(height: 8),
-            Text(
-              bill.footerText,
-              style: TextStyle(fontSize: 16),
-            ),
+
             SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
@@ -542,11 +599,14 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
     );
   }
 
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Cashier'),
+        backgroundColor: Colors.black,
       ),
       body: Row(
         children: [
@@ -617,34 +677,22 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
               children: [
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Menu Categories:',
                         style: TextStyle(fontSize: 20),
                       ),
-                      Row(
+                      SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
                         children: [
-                          _buildCategoryButton('café'),
-                          SizedBox(width: 8),
-                          _buildCategoryButton('Chocolat Chaud'),
-                          SizedBox(width: 8),
-                          _buildCategoryButton('Chocolat glacée'),
-                          SizedBox(width: 8),
-                          _buildCategoryButton('Ice coffee'),
-                          SizedBox(width: 8),
-                          _buildCategoryButton('Eau minérale'),
-                          SizedBox(width: 8),
-                          _buildCategoryButton('Thé'),
-                          SizedBox(width: 8),
-                          _buildCategoryButton('Jus'),
-                          SizedBox(width: 8),
-                          _buildCategoryButton('Mojito'),
-                          SizedBox(width: 8),
-                          _buildCategoryButton('Boisson'),
+                          for (Map<String, dynamic> categoryInfo in _categories)
+                            _buildCategoryButton(categoryInfo['name'], categoryInfo['id']),
                         ],
                       ),
+
                     ],
                   ),
                 ),
@@ -675,17 +723,26 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
                     children: [
                       Expanded(
                         flex: 3,
-                        child: GridView.count(
-                          crossAxisCount: 4,
-                          children: _getProductsByCategory(_selectedCategory)
-                              .map((product) => _buildProductItem(
-                            product.name,
-                            product.price,
-                            product.imageUrl,
-                          ))
-                              .toList(),
+                        child: FutureBuilder<List<Product>>(
+                          future: _fetchProductsByCategory(_selectedCategory),
+                          builder: (BuildContext context, AsyncSnapshot<List<Product>> snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return Center(child: CircularProgressIndicator());
+                            } else if (snapshot.hasError) {
+                              return Center(child: Text('Error: ${snapshot.error}'));
+                            } else {
+                              return GridView.count(
+                                crossAxisCount: 4,
+                                children: snapshot.data!.map<Widget>((product) {
+                                  int selectedQuantity = _productQuantities[product.name] ?? 0;
+                                  return _buildProductItem(product, selectedQuantity);
+                                }).toList(),
+                              );
+                            }
+                          },
                         ),
                       ),
+
                       Expanded(
                         flex: 1,
                         child: Container(
@@ -706,16 +763,19 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
                               Divider(),
                               Expanded(
                                 child: ListView.builder(
-                                  itemCount: _orderItems.length,
+                                  itemCount: _selectedProducts.length,
                                   itemBuilder: (context, index) {
-                                    final orderItem = _orderItems[index];
+                                    final orderItem = _selectedProducts[index];
                                     return ListTile(
                                       leading: Icon(Icons.circle, color: Colors.black),
-                                      title: Text(orderItem),
+                                      title: Text('${orderItem.product.name} (x${orderItem.quantity}) ${int.parse(orderItem.product.price) * orderItem.quantity} DT'),
+
                                     );
                                   },
                                 ),
                               ),
+
+
                               Divider(),
                               Padding(
                                 padding: const EdgeInsets.all(16.0),
@@ -728,10 +788,49 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
                                 ),
                               ),
                               SizedBox(height: 16),
-                              ElevatedButton(
-                                onPressed: _createBill,
-                                child: Text('Order Now'),
+
+
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  ElevatedButton(
+                                    onPressed: _createBill,
+                                    child: Text('Order Now'),
+                                    style: ButtonStyle(
+                                      backgroundColor: MaterialStateProperty.all<Color>(Colors.black),
+                                    ),
+                                  ),
+                                  SizedBox(width: 16),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            title: Text('Bills'),
+
+                                            content: Container(
+                                              width: MediaQuery.of(context).size.width * 0.3,
+                                              height: 300,
+                                              child: ListView.builder(
+                                                itemCount: _bills.length,
+                                                itemBuilder: (context, index) {
+                                                  return _buildBillItem(_bills[index]);
+                                                },
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    },
+                                    child: Text('View Bills'),
+                                    style: ButtonStyle(
+                                      backgroundColor: MaterialStateProperty.all<Color>(Colors.black),
+                                    ),
+                                  ),
+                                ],
                               ),
+                              SizedBox(height: 16),
                             ],
                           ),
                         ),
@@ -739,40 +838,9 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
                     ],
                   ),
                 ),
-                SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton(
-                      onPressed: _createBill,
-                      child: Text('Create New Bill'),
-                    ),
-                    SizedBox(width: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: Text('Bills'),
-                              content: Container(
-                                width: double.maxFinite,
-                                height: 300,
-                                child: ListView.builder(
-                                  itemCount: _bills.length,
-                                  itemBuilder: (context, index) {
-                                    return _buildBillItem(_bills[index]);
-                                  },
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                      child: Text('View Bills'),
-                    ),
-                  ],
-                ),
+
+
+
               ],
             ),
           ),
@@ -782,23 +850,111 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
   }
 
   Widget _buildLeftBarButton(String label, IconData icon, bool isSelected) {
-    return ElevatedButton.icon(
-      onPressed: () {},
-      icon: Icon(
-        icon,
-        color: isSelected ? Colors.white : Colors.black,
-      ),
-      label: Text(
-        label,
-        style: TextStyle(
+    if (label == 'View Bills' || label == 'Message') {
+      return TextButton.icon(
+        onPressed: () {
+          if (label == 'View Bills') {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Text('Bills'),
+                  content: Container(
+                    width: double.maxFinite,
+                    height: 300,
+                    child: ListView.builder(
+                      itemCount: _bills.length,
+                      itemBuilder: (context, index) {
+                        return _buildBillItem(_bills[index]);
+                      },
+                    ),
+                  ),
+                );
+              },
+            );
+          } else if (label == 'Message') {
+            // Implement the behavior for the "Message" button here
+          }
+        },
+        icon: Icon(
+          icon,
           color: isSelected ? Colors.white : Colors.black,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
+        label: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.black,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+        style: ButtonStyle(
+          backgroundColor: MaterialStateProperty.all<Color>(
+            isSelected ? Colors.black : Colors.white,
+          ),
+          padding: MaterialStateProperty.all<EdgeInsets>(
+            EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          ),
+          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(
+                color: Colors.grey[300]!,
+                width: 1.5,
+              ),
+            ),
+          ),
+        ),
+      );
+    } else {
+      // For other buttons, return the standard ElevatedButton.icon
+      return ElevatedButton.icon(
+        onPressed: () {},
+        icon: Icon(
+          icon,
+          color: isSelected ? Colors.white : Colors.black,
+        ),
+        label: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.black,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+        style: ButtonStyle(
+          backgroundColor: MaterialStateProperty.all<Color>(
+            isSelected ? Colors.black : Colors.white,
+          ),
+          padding: MaterialStateProperty.all<EdgeInsets>(
+            EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          ),
+          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(
+                color: Colors.grey[300]!,
+                width: 1.5,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
+
+  Widget _buildCategoryButton(String category, int categoryId) {
+    return ElevatedButton(
+      onPressed: () {
+        setState(() {
+          _selectedCategory = categoryId;
+        });
+      },
+      child: Text(
+        category,
+        style: TextStyle(fontSize: 16, color: _selectedCategory == categoryId ? Colors.white : Colors.black),
       ),
       style: ButtonStyle(
-        backgroundColor: MaterialStateProperty.all<Color>(
-          isSelected ? Colors.black : Colors.white,
-        ),
+        backgroundColor: MaterialStateProperty.all<Color>(_selectedCategory == categoryId ? Colors.black : Colors.white),
         padding: MaterialStateProperty.all<EdgeInsets>(
           EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         ),
@@ -815,34 +971,8 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildCategoryButton(String category) {
-    return ElevatedButton(
-      onPressed: () {
-        setState(() {
-          _selectedCategory = category;
-        });
-      },
-      child: Text(
-        category,
-        style: TextStyle(fontSize: 16, color: _selectedCategory == category ? Colors.white : Colors.black),
-      ),
-      style: ButtonStyle(
-        backgroundColor: MaterialStateProperty.all<Color>(_selectedCategory == category ? Colors.black : Colors.white),
-        padding: MaterialStateProperty.all<EdgeInsets>(
-          EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        ),
-        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(
-              color: Colors.grey[300]!,
-              width: 1.5,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+
+
 }
 
 class Bill {
@@ -853,6 +983,7 @@ class Bill {
   final String title;
   final String welcomeText;
   final String footerText;
+  final int totalAmount;
 
   Bill({
     required this.serverName,
@@ -862,12 +993,13 @@ class Bill {
     required this.title,
     required this.welcomeText,
     required this.footerText,
+    required this.totalAmount,
   });
 }
 
 class Product {
   final String name;
-  final int price;
+  final String price; // Change the type to String
   final String imageUrl;
 
   Product({required this.name, required this.price, required this.imageUrl});
