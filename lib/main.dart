@@ -6,6 +6,7 @@ import 'Inventory.dart';
 import 'ProductCatalog.dart';
 import 'home_page.dart';
 import 'login.dart';
+import 'login_inventory.dart';
 import 'menu.dart';
 import 'splash_screen.dart';
 import 'dart:math';
@@ -36,6 +37,7 @@ class MyApp extends StatelessWidget {
         '/caisse' : (context) => CashierPage(),
         '/stock' : (context) => InventoryManagementPage(),
         '/menu' : (context) => MenuTablet(),
+        '/login_inventory' : (context) => LoginInventoryPage(),
       },
     );
   }

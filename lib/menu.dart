@@ -30,6 +30,21 @@ class _MenuTabletState extends State<MenuTablet> {
     fetchCategories();
   }
 
+  Future<String> fetchDisponibiliteStatus(int productId) async {
+    final response = await http.get(Uri.parse('http://localhost:3000/products/disponibilite/$productId'));
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body);
+      final String disponibilite = data['disponibilite'];
+
+      return disponibilite;
+    } else {
+      print('Error fetching disponibilite: ${response.statusCode}');
+      return ''; // Handle the error case here
+    }
+  }
+
+
   Future<void> fetchCategories() async {
     final response = await http.get(Uri.parse('http://localhost:3000/categories'));
 
@@ -64,6 +79,7 @@ class _MenuTabletState extends State<MenuTablet> {
           price: productJson['price'] != null ? productJson['price'].toString() : '',
           imageUrl: productJson['image_url'] ?? '',
           description: productJson['description'] ?? '',
+          disponibilite: productJson['disponibilite'] ?? '', // Fetch disponibilite status
         );
       }).toList();
 
@@ -82,6 +98,7 @@ class _MenuTabletState extends State<MenuTablet> {
       }
     }
   }
+
 
   Widget _buildCategoryButton(Map<String, dynamic> category) {
     final categoryName = category['name'];
@@ -119,6 +136,9 @@ class _MenuTabletState extends State<MenuTablet> {
 
   Widget _buildProductItem(Product product, int index) {
     final isSelected = _selectedProductIndices.contains(index);
+
+    // Determine the text color based on disponibilite status
+    final textColor = product.disponibilite == 'Disponible' ? Colors.green : Colors.red;
 
     return GestureDetector(
       onTap: () {
@@ -174,7 +194,7 @@ class _MenuTabletState extends State<MenuTablet> {
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
                   product.name,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor), // Set text color
                 ),
               ),
               Padding(
@@ -194,7 +214,6 @@ class _MenuTabletState extends State<MenuTablet> {
               if (product.selected)
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -819,6 +838,7 @@ class Product {
   final String price;
   final String imageUrl;
   final String description;
+  final String disponibilite; // Add disponibilite property
   bool selected;
   int quantity;
   String note;
@@ -831,5 +851,6 @@ class Product {
     this.selected = false,
     this.quantity = 1,
     this.note = '',
+    required this.disponibilite, // Initialize disponibilite property
   });
 }

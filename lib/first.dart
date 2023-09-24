@@ -2,6 +2,7 @@ import 'CashierPage.dart';
 import 'Inventory.dart';
 import 'home_page.dart';
 import 'package:flutter/material.dart';
+import 'login_inventory.dart';
 import 'menu.dart';
 import 'splash_screen.dart';
 
@@ -112,7 +113,7 @@ class _FirstState extends State<First> {
                   // Navigate to splash_screen.dart when the button is clicked
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => InventoryManagementPage()),
+                    MaterialPageRoute(builder: (context) => LoginInventoryPage()),
                   );
                 },
                 ),

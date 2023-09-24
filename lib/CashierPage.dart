@@ -382,41 +382,64 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
 
 
   // Method to create a new bill
-  void _createBill() {
+  void _createBill() async {
     if (_selectedEmployee != null && _totalAmount > 0) {
-      List<String> selectedProducts = [];
-      int totalBillAmount = 0; // Initialize the total bill amount
+      List<Map<String, dynamic>> billItems = [];
+      int totalBillAmount = 0;
 
-      // Add the selected products with quantities and prices to the bill
       _selectedProducts.forEach((orderItem) {
         int itemTotal = int.parse(orderItem.product.price) * orderItem.quantity;
-        totalBillAmount += itemTotal; // Increment the total bill amount
-        selectedProducts.add('${orderItem.product.name} (x${orderItem.quantity}) - \$${itemTotal}');
+        totalBillAmount += itemTotal;
+        billItems.add({
+          'product_name': orderItem.product.name,
+          'quantity': orderItem.quantity,
+          'total_amount': itemTotal,
+        });
       });
 
-      if (selectedProducts.isNotEmpty) {
+      if (billItems.isNotEmpty) {
         Bill bill = Bill(
-          serverName: _selectedEmployee!,
+          serverName: _selectedEmployee ?? '',  // Use an empty string as a default value if _selectedEmployee is null
           dateTime: DateTime.now(),
           tableNumber: _selectedTable,
-          products: selectedProducts,
+          totalAmount: totalBillAmount,
+          products: billItems.map((item) =>
+          '${item['product_name']} (x${item['quantity']}) - \$${item['total_amount']}').toList(),
           title: 'The House Coffee Shop',
           welcomeText: 'Welcome',
           footerText: 'We hope to see you again!',
-          totalAmount: totalBillAmount, // Pass the total bill amount to the Bill object
         );
+
+        final response = await http.post(
+          Uri.parse('http://localhost:3000/bills'),
+          body: {
+            'serverName': bill.serverName,
+            'dateTime': bill.dateTime.toString(),
+            'tableNumber': bill.tableNumber.toString(),
+            'products': bill.products.join(','),
+            'totalAmount': bill.totalAmount.toString(),
+          },
+        );
+
+        if (response.statusCode == 200) {
+          print('Bill created successfully');
+        } else {
+          print('Error creating bill: ${response.statusCode}');
+        }
 
         setState(() {
           _bills.add(bill);
-          _selectedProducts.clear(); // Clear the selected products list
-          _productQuantities.clear(); // Clear the product quantities map
+          _selectedProducts.clear();
+          _productQuantities.clear();
         });
 
-        // Reset the total amount
         _totalAmount = 0;
       }
     }
   }
+
+
+
 
 
 
@@ -525,6 +548,48 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
     );
   }
 
+  void _payBill(int billId) async {
+    final url = Uri.parse('http://localhost:3000/bills/$billId/pay');
+    try {
+      final response = await http.put(url);
+
+      if (response.statusCode == 200) {
+        // Bill payment status updated successfully
+        print('Bill payment status updated successfully');
+        // You can add any additional logic or UI updates here
+      } else {
+        // Handle HTTP error
+        print('Error updating bill payment status: ${response.statusCode}');
+        // You can display an error message to the user if needed
+      }
+    } catch (e) {
+      // Handle exceptions
+      print('Error updating bill payment status: $e');
+      // You can display an error message to the user if needed
+    }
+  }
+
+  Future<void> _deleteBill(int billId) async {
+    try {
+      final response = await http.delete(Uri.parse('http://localhost:3000/bills/$billId'));
+
+      if (response.statusCode == 200) {
+        // Bill deleted successfully
+        // Refresh the widget to reflect the updated bill list
+        setState(() {});
+        print('Bill deleted successfully');
+      } else {
+        // Handle error cases
+        print('Failed to delete bill: ${response.statusCode}');
+      }
+    } catch (error) {
+      // Handle network or other errors
+      print('Error deleting bill: $error');
+    }
+  }
+
+
+
 
 
   Widget _buildBillItem(Bill bill) {
@@ -535,11 +600,34 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              bill.title,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  bill.title,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.edit),
+                      onPressed: () {
+                        // Handle edit button click here
+                      },
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.close),
+                      onPressed: () {
+                        _deleteBill(bill.id ?? 0).then((_) {
+                          // Bill deleted, trigger a rebuild
+                          setState(() {});
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ],
             ),
-
             Text(
               'Welcome',
               style: TextStyle(fontSize: 16),
@@ -585,19 +673,31 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
               'we hope you enjoyed the service',
               style: TextStyle(fontSize: 16),
             ),
-
             SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                _printBill(bill);
-              },
-              child: Text('Print'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start, // Adjust this as needed
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    _printBill(bill);
+                  },
+                  child: Text('Print'),
+                ),
+                SizedBox(width: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    _payBill(bill.id ?? 0); // Pass the bill ID to the pay function
+                  },
+                  child: Text('Payeer'),
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
   }
+
 
 
 
@@ -802,22 +902,24 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
                                   ),
                                   SizedBox(width: 16),
                                   ElevatedButton(
-                                    onPressed: () {
+                                    onPressed: () async {
+                                      final List<Bill> unpaidBills = await _fetchUnpaidBills();
                                       showDialog(
                                         context: context,
                                         builder: (BuildContext context) {
                                           return AlertDialog(
                                             title: Text('Bills'),
-
                                             content: Container(
                                               width: MediaQuery.of(context).size.width * 0.3,
                                               height: 300,
                                               child: ListView.builder(
-                                                itemCount: _bills.length,
+                                                itemCount: unpaidBills.length,
                                                 itemBuilder: (context, index) {
-                                                  return _buildBillItem(_bills[index]);
+                                                  return _buildBillItem(unpaidBills[index]);
+
                                                 },
                                               ),
+
                                             ),
                                           );
                                         },
@@ -828,6 +930,8 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
                                       backgroundColor: MaterialStateProperty.all<Color>(Colors.black),
                                     ),
                                   ),
+
+
                                 ],
                               ),
                               SizedBox(height: 16),
@@ -849,31 +953,79 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
     );
   }
 
+  Future<List<Bill>> _fetchUnpaidBills() async {
+    final response = await http.get(Uri.parse('http://localhost:3000/bills'));
+
+    if (response.statusCode == 200) {
+      final jsonData = json.decode(response.body);
+
+      final List<dynamic> billJsonList = jsonData['bills'];
+      _bills = billJsonList.map<Bill>((billJson) {
+        return Bill(
+          title: billJson['title'] ?? '', // Use '' as the default value if 'title' is null
+          welcomeText: billJson['welcomeText'] ?? '', // Use '' as the default value if 'welcomeText' is null
+          serverName: billJson['serverName'] ?? '', // Use '' as the default value if 'serverName' is null
+          dateTime: DateTime.tryParse(billJson['dateTime'] ?? '') ?? DateTime.now(), // Use current time if 'dateTime' is null or invalid
+          tableNumber: billJson['tableNumber'] ?? 0, // Use 0 as the default value if 'tableNumber' is null
+          products: List<String>.from(billJson['products'] ?? []), // Use an empty list as the default value if 'products' is null
+          totalAmount: billJson['totalAmount'] ?? 0, // Use 0 as the default value if 'totalAmount' is null
+          id: billJson['id'] ?? 0, footerText: '', // Use 0 as the default value if 'id' is null
+        );
+      }).toList();
+
+      return _bills;
+
+      // Return the list of bills
+    } else {
+      throw Exception('Failed to load unpaid bills');
+    }
+  }
+
+
+
   Widget _buildLeftBarButton(String label, IconData icon, bool isSelected) {
-    if (label == 'View Bills' || label == 'Message') {
-      return TextButton.icon(
-        onPressed: () {
-          if (label == 'View Bills') {
+    if (label == 'View Bills') {
+      return ElevatedButton.icon(
+        onPressed: () async {
+          // Make an HTTP GET request to retrieve unpaid bills
+          final response = await http.get(Uri.parse('http://localhost:3000/bills'));
+
+          if (response.statusCode == 200) {
+            // Parse the response data
+            // Assuming your response data is in JSON format
+            final Map<String, dynamic> data = json.decode(response.body);
+            final List<dynamic> bills = data['bills'];
+
+            // Show the bills using a dialog
             showDialog(
               context: context,
               builder: (BuildContext context) {
                 return AlertDialog(
-                  title: Text('Bills'),
+                  title: Text('Unpaid Bills'),
                   content: Container(
-                    width: double.maxFinite,
+                    width: MediaQuery.of(context).size.width * 0.3,
                     height: 300,
                     child: ListView.builder(
-                      itemCount: _bills.length,
+                      itemCount: bills.length,
                       itemBuilder: (context, index) {
-                        return _buildBillItem(_bills[index]);
+                        // Build UI for each bill item
+                        // You can customize this as per your requirements
+                        return ListTile(
+                          title: Text('Bill ID: ${bills[index]['id']}'),
+                          subtitle: Text('Total Amount: \$${bills[index]['totalAmount']}'),
+                          onTap: () {
+                            // Handle tap on a specific bill if needed
+                          },
+                        );
                       },
                     ),
                   ),
                 );
               },
             );
-          } else if (label == 'Message') {
-            // Implement the behavior for the "Message" button here
+          } else {
+            // Handle errors if any
+            print('Failed to load bills: ${response.statusCode}');
           }
         },
         icon: Icon(
@@ -942,6 +1094,8 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
   }
 
 
+
+
   Widget _buildCategoryButton(String category, int categoryId) {
     return ElevatedButton(
       onPressed: () {
@@ -984,6 +1138,8 @@ class Bill {
   final String welcomeText;
   final String footerText;
   final int totalAmount;
+  final int? id;
+
 
   Bill({
     required this.serverName,
@@ -994,6 +1150,7 @@ class Bill {
     required this.welcomeText,
     required this.footerText,
     required this.totalAmount,
+    this.id,
   });
 }
 
@@ -1004,3 +1161,4 @@ class Product {
 
   Product({required this.name, required this.price, required this.imageUrl});
 }
+
