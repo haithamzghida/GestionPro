@@ -46,8 +46,8 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
         // Load the Fournisseur page
       } else if (page == 'gestion_stock/livraison') {
         // Load the Livraison page
-      } else if (page == 'gestion_stock/caisse') {
-        // Load the Caisse page
+      } else if (page == 'gestion_stock/users') {
+        // Load the users page
       }
     });
   }
@@ -248,13 +248,13 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
 
                 ListTile(
                   title: Text(
-                    'Caisse',
+                    'users',
                     style: TextStyle(
-                      color: _selectedPage == 'gestion_stock/caisse' ? Colors.white : Colors.grey,
+                      color: _selectedPage == 'gestion_stock/users' ? Colors.white : Colors.grey,
                     ),
                   ),
                   onTap: () {
-                    _selectPage('gestion_stock/caisse');
+                    _selectPage('gestion_stock/users');
                   },
                 ),
 
@@ -282,6 +282,8 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
                 ? GestionStockMatierePremierePage()
                 :  _selectedPage == 'gestion_stock/fournisseur'
                 ? GestionStockFournisseurPage()
+                :  _selectedPage == 'gestion_stock/users'
+                ? GestionStockUsersPage()
                 : _selectedPage == 'gestion_stock'
                 ? GestionStockPage()
                 : Container(),
@@ -1093,14 +1095,324 @@ class GestionStockLivraisonPage extends StatelessWidget {
   }
 }
 
-class GestionStockCaissePage extends StatelessWidget {
+
+
+class GestionStockUsersPage extends StatefulWidget {
+  @override
+  _GestionStockUsersPageState createState() => _GestionStockUsersPageState();
+}
+
+class _GestionStockUsersPageState extends State<GestionStockUsersPage> {
+  List<Map<String, dynamic>> _loginInventoryData = [];
+  String selectedRole = 'Super_admin'; // Default role
+
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  String editUserId = ''; // Stores the ID of the user being edited
+
+  @override
+  void initState() {
+    super.initState();
+    fetchLoginInventoryData();
+  }
+
+  Future<void> fetchLoginInventoryData() async {
+    final response = await http.get(Uri.parse('http://localhost:3000/login_inventory'));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      setState(() {
+        _loginInventoryData = List<Map<String, dynamic>>.from(data['login_inventory']);
+      });
+    } else {
+      // Handle errors
+      print('Failed to fetch login inventory data: ${response.statusCode}');
+    }
+  }
+
+  Future<void> addLoginUser() async {
+    final response = await http.post(
+      Uri.parse('http://localhost:3000/login_inventory'),
+      body: {
+        'email': emailController.text,
+        'password': passwordController.text,
+        'role': selectedRole,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      // Successfully added the login user, fetch updated data
+      fetchLoginInventoryData();
+      print('Login user added successfully');
+    } else {
+      // Handle errors
+      print('Failed to add login user: ${response.statusCode}');
+    }
+  }
+
+  Future<void> editLoginUser() async {
+    final response = await http.put(
+      Uri.parse('http://localhost:3000/edit_login/$editUserId'),
+      body: {
+        'email': emailController.text,
+        'password': passwordController.text,
+        'role': selectedRole,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      // Successfully edited the login user, fetch updated data
+      fetchLoginInventoryData();
+      print('Login user edited successfully');
+    } else {
+      // Handle errors
+      print('Failed to edit login user: ${response.statusCode}');
+    }
+  }
+
+  void showAddUserDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Add Login User'),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DropdownButtonFormField<String>(
+                  value: selectedRole,
+                  items: ['Super_admin', 'Gérant', 'Responsable', 'Employee']
+                      .map((String role) {
+                    return DropdownMenuItem<String>(
+                      value: role,
+                      child: Text(role),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedRole = newValue!;
+                    });
+                  },
+                  decoration: InputDecoration(labelText: 'Select Role'),
+                ),
+                TextFormField(
+                  controller: emailController,
+                  decoration: InputDecoration(labelText: 'Email'),
+                ),
+                TextFormField(
+                  controller: passwordController,
+                  decoration: InputDecoration(labelText: 'Password'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                addLoginUser();
+                Navigator.of(context).pop();
+              },
+              child: Text('Add'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void showEditUserDialog(Map<String, dynamic> userData) {
+    // Populate the dialog fields with the user's data
+    emailController.text = userData['email'];
+    passwordController.text = userData['password'];
+    selectedRole = userData['role'];
+    editUserId = userData['id'].toString(); // Store the user's ID being edited
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Edit Login User'),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DropdownButtonFormField<String>(
+                  value: selectedRole,
+                  items: ['Super_admin', 'Gérant', 'Responsable', 'Employee']
+                      .map((String role) {
+                    return DropdownMenuItem<String>(
+                      value: role,
+                      child: Text(role),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedRole = newValue!;
+                    });
+                  },
+                  decoration: InputDecoration(labelText: 'Select Role'),
+                ),
+                TextFormField(
+                  controller: emailController,
+                  decoration: InputDecoration(labelText: 'Email'),
+                ),
+                TextFormField(
+                  controller: passwordController,
+                  decoration: InputDecoration(labelText: 'Password'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                editLoginUser(); // Call the edit function when the "Edit" button is pressed
+                Navigator.of(context).pop();
+              },
+              child: Text('Edit'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> deleteLoginUser(String id) async {
+    final response = await http.delete(Uri.parse('http://localhost:3000/delete_login/$id'));
+
+    if (response.statusCode == 200) {
+      // Successfully deleted the login user, fetch updated data
+      fetchLoginInventoryData();
+      print('Login user deleted successfully');
+    } else {
+      // Handle errors
+      print('Failed to delete login user: ${response.statusCode}');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text('Caisse Page Content'),
+    return Scaffold(
+      body: Column(
+        children: [
+          SizedBox(height: 16.0), // Add space above the button
+          Align(
+            alignment: Alignment.centerLeft, // Align the button to the left
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 16.0), // Add left padding for the text
+                  child: Text(
+                    'Gestion Utilisateur',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                      fontSize: 20.0,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black,
+                          offset: Offset(2.0, 2.0),
+                          blurRadius: 2.0,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 16.0),
+                  child: ElevatedButton(
+                    onPressed: showAddUserDialog,
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.white,
+                      onPrimary: Colors.black,
+                      elevation: 5.0,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text("Ajouter un compte"),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 16.0),
+          Expanded(
+            child: Card(
+              elevation: 5.0,
+              margin: EdgeInsets.all(16.0),
+              child: DataTable(
+                columnSpacing: 16.0,
+                headingRowColor: MaterialStateColor.resolveWith((states) => Colors.black.withOpacity(0.1)),
+                dataRowHeight: 60.0,
+                headingTextStyle: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                columns: [
+                  DataColumn(label: Text('Email')),
+                  DataColumn(label: Text('Password')),
+                  DataColumn(label: Text('Role')),
+                  DataColumn(label: Text('Created_at')),
+                  DataColumn(label: Text('Updated_at')),
+                  DataColumn(label: Text('Actions')),
+                ],
+                rows: _loginInventoryData.map((item) {
+                  final id = item['id'].toString();
+                  return DataRow(cells: [
+                    DataCell(Text(item['email'])),
+                    DataCell(Text(item['password'])),
+                    DataCell(Text(item['role'])),
+                    DataCell(Text(item['created_at'])),
+                    DataCell(Text(item['updated_at'])),
+                    DataCell(Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.edit),
+                          onPressed: () {
+                            // Call the edit function with the user's data when the edit icon is pressed
+                            showEditUserDialog(item);
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () {
+                            // Call the delete function when the delete icon is pressed
+                            deleteLoginUser(item['id'].toString());
+                          },
+                        ),
+                  IconButton(
+                  icon: Icon(Icons.info),
+                  onPressed: () {
+                  //
+                    
+                  },
+                  ),
+
+                      ],
+                    )),
+                  ]);
+                }).toList(),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
+
 
 
 class GestionStockPage extends StatelessWidget {
@@ -1586,7 +1898,7 @@ class _GestionStockProduitsPageState extends State<GestionStockProduitsPage> {
         );
       },
     );
-  } 
+  }
 
 
 
