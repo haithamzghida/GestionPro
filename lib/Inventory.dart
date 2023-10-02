@@ -4,27 +4,41 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
-
+import 'package:provider/provider.dart';
+import 'user_model.dart';
 
 
 
 void main() {
-  runApp(MyApp());
+  final userRole = 'Super_admin'; // Replace with the actual user's role
+  runApp(MyApp(userRole: userRole));
 }
 
+
 class MyApp extends StatelessWidget {
+  final String userRole; // Add this property
+
+  MyApp({required this.userRole}); // Constructor with the userRole parameter
+
   @override
   Widget build(BuildContext context) {
+    final userRole = Provider.of<UserModel>(context).role;
     return MaterialApp(
-      home: InventoryManagementPage(),
+      home: InventoryManagementPage(userRole: userRole), // Pass the userRole to InventoryManagementPage
     );
   }
 }
 
+
 class InventoryManagementPage extends StatefulWidget {
+  final String userRole; // Add this property
+
+  InventoryManagementPage({required this.userRole}); // Constructor with the userRole parameter
+
   @override
   _InventoryManagementPageState createState() => _InventoryManagementPageState();
 }
+
 
 class _InventoryManagementPageState extends State<InventoryManagementPage> {
   String _selectedPage = 'dashboard';
@@ -33,23 +47,57 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
   Category? _selectedCategory;
   bool _isDropdownOpen = false;
 
+  // Access the user's role from UserModel
+  String get userRole =>
+      Provider.of<UserModel>(context, listen: false).role; // Replace 'Super_admin' with the actual role you want to assign
+
 
   void _selectPage(String page) {
     setState(() {
       _selectedPage = page;
+
       if (page == 'gestion_stock/produits') {
         fetchProducts();
-      } else if (page == 'gestion_stock/facteur') {
-        // Load the Facteur page
+      } else if (page == 'gestion_stock/facteur' && canViewFacteur()) {
+        // Load the Facteur page only if the user has permission
         // You can use Navigator to push a new page or any other approach you prefer
-      } else if (page == 'gestion_stock/fournisseur') {
-        // Load the Fournisseur page
-      } else if (page == 'gestion_stock/livraison') {
-        // Load the Livraison page
-      } else if (page == 'gestion_stock/users') {
-        // Load the users page
+      } else if (page == 'gestion_stock/fournisseur' && canViewFournisseur()) {
+        // Load the Fournisseur page only if the user has permission
+      } else if (page == 'gestion_stock/livraison' && canViewLivraison()) {
+        // Load the Livraison page only if the user has permission
+      } else if (page == 'gestion_stock/users' && canViewUsers()) {
+        // Load the users page only if the user has permission
+      }else if (page == 'gestion_stock/dashboard' && canViewdashboard()) {
+        // Load the users page only if the user has permission
+      }
+      else {
+        // Handle unauthorized access here (e.g., show an error message)
+        print('Unauthorized access for page: $page');
       }
     });
+  }
+
+
+
+  // Define role-based permission functions
+  bool canViewdashboard() {
+    return userRole == 'Super_admin' || userRole == 'gérant' || userRole == 'responsable';
+  }
+
+  bool canViewFacteur() {
+    return userRole == 'Super_admin' || userRole == 'gérant' || userRole == 'responsable' || userRole == 'employee' ;
+  }
+
+  bool canViewFournisseur() {
+    return userRole == 'Super_admin' || userRole == 'gérant' ;
+  }
+
+  bool canViewLivraison() {
+    return userRole == 'Super_admin' || userRole == 'gérant' || userRole == 'responsable' || userRole == 'employee';
+  }
+
+  bool canViewUsers() {
+    return userRole == 'Super_admin';
   }
 
 
@@ -138,19 +186,18 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
                     color: Colors.black,
                   ),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start, // Align content at the top
-                    crossAxisAlignment: CrossAxisAlignment.center, // Center content horizontally
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
-                      Container( // Wrap the logo in a Container
-
+                      Container(
                         child: Image.asset(
                           'assets/logo.png',
-                          width: 200, // Adjust the width as needed
-                          height: 100, // Adjust the height as needed
-                          fit: BoxFit.contain, // Fit the image within the container
+                          width: 200,
+                          height: 100,
+                          fit: BoxFit.contain,
                         ),
                       ),
-                      SizedBox(height: 10), // Add some spacing between the logo and text
+                      SizedBox(height: 10),
                       Text(
                         'The House Stock',
                         style: TextStyle(
@@ -161,111 +208,123 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
                     ],
                   ),
                 ),
-
-                ListTile(
-                  title: Text(
-                    'Dashboard',
-                    style: TextStyle(
-                      color: _selectedPage == 'dashboard' ? Colors.white : Colors.grey,
-                    ),
-                  ),
-                  onTap: () {
-                    _selectPage('dashboard');
-                  },
-                ),
-
-                ExpansionTile(
-                  title: Text(
-                    'Gestion de Stock',
-                    style: TextStyle(
-                      color: _selectedPage.startsWith('gestion_stock/') ? Colors.white : Colors.grey,
-                    ),
-                  ),
-                  initiallyExpanded: _selectedPage.startsWith('gestion_stock/'),
-                  children: <Widget>[
-                    ListTile(
-                      title: Text(
-                        'Produits',
-                        style: TextStyle(
-                          color: _selectedPage == 'gestion_stock/produits' ? Colors.white : Colors.grey,
-                        ),
+                if (canViewdashboard())
+                  ListTile(
+                    title: Text(
+                      'Dashboard',
+                      style: TextStyle(
+                        color: _selectedPage == 'gestion_stock/dashboard'
+                            ? Colors.white
+                            : Colors.grey,
                       ),
-                      onTap: () {
-                        _selectPage('gestion_stock/produits');
-                      },
                     ),
-                    ListTile(
-                      title: Text(
-                        'Matière Première',
-                        style: TextStyle(
-                          color: _selectedPage == 'gestion_stock/matiere_premiere'
-                              ? Colors.white
-                              : Colors.grey,
-                        ),
+                    onTap: () {
+                      _selectPage('gestion_stock/dashboard');
+                    },
+                  ),
+                if (canViewStockManagement())
+                  ExpansionTile(
+                    title: Text(
+                      'Gestion de Stock',
+                      style: TextStyle(
+                        color: _selectedPage.startsWith('gestion_stock/')
+                            ? Colors.white
+                            : Colors.grey,
                       ),
-                      onTap: () {
-                        _selectPage('gestion_stock/matiere_premiere');
-                      },
                     ),
-                  ],
-                ),
-
-                ListTile(
-                  title: Text(
-                    'Facteur',
-                    style: TextStyle(
-                      color: _selectedPage == 'gestion_stock/facteur' ? Colors.white : Colors.grey,
-                    ),
+                    initiallyExpanded: _selectedPage.startsWith('gestion_stock/'),
+                    children: <Widget>[
+                      ListTile(
+                        title: Text(
+                          'Produits',
+                          style: TextStyle(
+                            color: _selectedPage == 'gestion_stock/produits'
+                                ? Colors.white
+                                : Colors.grey,
+                          ),
+                        ),
+                        onTap: () {
+                          _selectPage('gestion_stock/produits');
+                        },
+                      ),
+                      ListTile(
+                        title: Text(
+                          'Matière Première',
+                          style: TextStyle(
+                            color: _selectedPage ==
+                                'gestion_stock/matiere_premiere'
+                                ? Colors.white
+                                : Colors.grey,
+                          ),
+                        ),
+                        onTap: () {
+                          _selectPage('gestion_stock/matiere_premiere');
+                        },
+                      ),
+                    ],
                   ),
-                  onTap: () {
-                    _selectPage('gestion_stock/facteur');
-                  },
-                ),
-
-                ListTile(
-                  title: Text(
-                    'Fournisseur',
-                    style: TextStyle(
-                      color: _selectedPage == 'gestion_stock/fournisseur' ? Colors.white : Colors.grey,
+                if (canViewFacteur())
+                  ListTile(
+                    title: Text(
+                      'Facteur',
+                      style: TextStyle(
+                        color: _selectedPage == 'gestion_stock/facteur'
+                            ? Colors.white
+                            : Colors.grey,
+                      ),
                     ),
+                    onTap: () {
+                      _selectPage('gestion_stock/facteur');
+                    },
                   ),
-                  onTap: () {
-                    _selectPage('gestion_stock/fournisseur');
-                  },
-                ),
-
-                ListTile(
-                  title: Text(
-                    'Livraison',
-                    style: TextStyle(
-                      color: _selectedPage == 'gestion_stock/livraison' ? Colors.white : Colors.grey,
+                if (canViewFournisseur())
+                  ListTile(
+                    title: Text(
+                      'Fournisseur',
+                      style: TextStyle(
+                        color: _selectedPage == 'gestion_stock/fournisseur'
+                            ? Colors.white
+                            : Colors.grey,
+                      ),
                     ),
+                    onTap: () {
+                      _selectPage('gestion_stock/fournisseur');
+                    },
                   ),
-                  onTap: () {
-                    _selectPage('gestion_stock/livraison');
-                  },
-                ),
-
-                ListTile(
-                  title: Text(
-                    'users',
-                    style: TextStyle(
-                      color: _selectedPage == 'gestion_stock/users' ? Colors.white : Colors.grey,
+                if (canViewLivraison())
+                  ListTile(
+                    title: Text(
+                      'Livraison',
+                      style: TextStyle(
+                        color: _selectedPage == 'gestion_stock/livraison'
+                            ? Colors.white
+                            : Colors.grey,
+                      ),
                     ),
+                    onTap: () {
+                      _selectPage('gestion_stock/livraison');
+                    },
                   ),
-                  onTap: () {
-                    _selectPage('gestion_stock/users');
-                  },
-                ),
-
-
+                if (canViewUsers())
+                  ListTile(
+                    title: Text(
+                      'Users',
+                      style: TextStyle(
+                        color: _selectedPage == 'gestion_stock/users'
+                            ? Colors.white
+                            : Colors.grey,
+                      ),
+                    ),
+                    onTap: () {
+                      _selectPage('gestion_stock/users');
+                    },
+                  ),
               ],
             ),
           ),
           Expanded(
             child: _selectedPage == 'dashboard'
                 ? DashboardPage()
-
                 : _selectedPage == 'gestion_stock/produits'
                 ? GestionStockProduitsPage(
               products: products,
@@ -277,12 +336,11 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
                 });
               },
             )
-
                 : _selectedPage == 'gestion_stock/matiere_premiere'
                 ? GestionStockMatierePremierePage()
-                :  _selectedPage == 'gestion_stock/fournisseur'
+                : _selectedPage == 'gestion_stock/fournisseur'
                 ? GestionStockFournisseurPage()
-                :  _selectedPage == 'gestion_stock/users'
+                : _selectedPage == 'gestion_stock/users'
                 ? GestionStockUsersPage()
                 : _selectedPage == 'gestion_stock'
                 ? GestionStockPage()
@@ -292,7 +350,16 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
       ),
     );
   }
+
+
+  bool canViewStockManagement() {
+    // Implement the logic to check if the user can view stock management
+    // Return true if the user can view, false otherwise
+    return userRole == 'Super_admin' || userRole == 'gérant' ; // Adjust the condition as needed
+  }
+
 }
+
 
 class DashboardPage extends StatelessWidget {
   @override
@@ -1104,7 +1171,7 @@ class GestionStockUsersPage extends StatefulWidget {
 
 class _GestionStockUsersPageState extends State<GestionStockUsersPage> {
   List<Map<String, dynamic>> _loginInventoryData = [];
-  String selectedRole = 'Super_admin'; // Default role
+  String selectedRole = 'responsable'; // Default role
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -1132,7 +1199,7 @@ class _GestionStockUsersPageState extends State<GestionStockUsersPage> {
 
   Future<void> addLoginUser() async {
     final response = await http.post(
-      Uri.parse('http://localhost:3000/login_inventory'),
+      Uri.parse('http://localhost:3000/login_inventory/add'),
       body: {
         'email': emailController.text,
         'password': passwordController.text,
@@ -1180,22 +1247,24 @@ class _GestionStockUsersPageState extends State<GestionStockUsersPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                DropdownButtonFormField<String>(
-                  value: selectedRole,
-                  items: ['Super_admin', 'Gérant', 'Responsable', 'Employee']
-                      .map((String role) {
-                    return DropdownMenuItem<String>(
-                      value: role,
-                      child: Text(role),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      selectedRole = newValue!;
-                    });
-                  },
-                  decoration: InputDecoration(labelText: 'Select Role'),
-                ),
+              DropdownButtonFormField<String>(
+              value: selectedRole,
+              items: ['super_admin', 'gérant', 'responsable', 'employee']
+                  .map((String role) {
+                return DropdownMenuItem<String>(
+                  value: role,
+                  child: Text(role),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  selectedRole = newValue!;
+                });
+              },
+              decoration: InputDecoration(labelText: 'Select Role'),
+            ),
+
+
                 TextFormField(
                   controller: emailController,
                   decoration: InputDecoration(labelText: 'Email'),
@@ -1321,7 +1390,7 @@ class _GestionStockUsersPageState extends State<GestionStockUsersPage> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
-                      fontSize: 20.0,
+                      fontSize: 50.0,
                       shadows: [
                         Shadow(
                           color: Colors.black,
@@ -1332,6 +1401,7 @@ class _GestionStockUsersPageState extends State<GestionStockUsersPage> {
                     ),
                   ),
                 ),
+                SizedBox(height: 16.0),
                 Padding(
                   padding: const EdgeInsets.only(left: 16.0),
                   child: ElevatedButton(
@@ -1392,13 +1462,13 @@ class _GestionStockUsersPageState extends State<GestionStockUsersPage> {
                             deleteLoginUser(item['id'].toString());
                           },
                         ),
-                  IconButton(
-                  icon: Icon(Icons.info),
-                  onPressed: () {
-                  //
-                    
-                  },
-                  ),
+                        IconButton(
+                          icon: Icon(Icons.info),
+                          onPressed: () {
+                            //
+
+                          },
+                        ),
 
                       ],
                     )),
@@ -2491,10 +2561,3 @@ class Category {
     };
   }
 }
-
-
-
-
-
-
-

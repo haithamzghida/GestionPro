@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'dart:convert';
 
 import 'Inventory.dart';
+import 'main.dart';
+import 'user_model.dart'; // Import the UserModel
 
 class LoginInventoryPage extends StatefulWidget {
   @override
@@ -14,17 +17,14 @@ class _LoginInventoryPageState extends State<LoginInventoryPage> {
   late String _email;
   late String _password;
 
-  void _submitForm() async {
+  void _submitForm(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
-      // Send the login request to the server
       final response = await http.post(
-        Uri.parse('http://localhost:3000/login_inventory'), // Replace with your actual API URL
+        Uri.parse('http://localhost:3000/login_inventory'),
         body: {'email': _email, 'password': _password},
       );
 
-      // Check the response status code and update the UI accordingly
       if (response.statusCode == 200) {
-        // Login successful
         final data = jsonDecode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -33,16 +33,18 @@ class _LoginInventoryPageState extends State<LoginInventoryPage> {
             behavior: SnackBarBehavior.floating,
           ),
         );
-        // Navigate to the home screen or InventoryManagementPage
-        Navigator.pushReplacement(
+
+        final userModel = Provider.of<UserModel>(context, listen: false);
+        userModel.setUserRole(data['role']);
+
+        Navigator.push(
           context,
           MaterialPageRoute(
             builder: (BuildContext context) =>
-                InventoryManagementPage(), // Replace with your desired destination
+                InventoryManagementPage(userRole: userRoleProvider(context)),
           ),
         );
       } else if (response.statusCode == 400) {
-        // Invalid email or password
         final data = jsonDecode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -52,7 +54,6 @@ class _LoginInventoryPageState extends State<LoginInventoryPage> {
           ),
         );
       } else {
-        // Server error
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Server error'),
@@ -159,7 +160,7 @@ class _LoginInventoryPageState extends State<LoginInventoryPage> {
                             ),
                             SizedBox(height: 40),
                             GestureDetector(
-                              onTap: _submitForm,
+                              onTap: () => _submitForm(context),
                               child: Container(
                                 height: 60,
                                 width: double.infinity,
@@ -186,6 +187,7 @@ class _LoginInventoryPageState extends State<LoginInventoryPage> {
                                 ),
                               ),
                             ),
+
                           ],
                         ),
                       ),
@@ -199,10 +201,4 @@ class _LoginInventoryPageState extends State<LoginInventoryPage> {
       ),
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(
-    home: LoginInventoryPage(),
-  ));
 }
