@@ -46,6 +46,9 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
   int _selectedCategory = 1;
   List<Map<String, dynamic>> _categories = [];
   Map<String, int> _productQuantities = {};
+  int unreadMessagesCount = 2;
+  int unreadMessages = 0;
+
 
   Future<List<Product>> _fetchProductsByCategory(int categoryId) async {
     final response = await http.get(Uri.parse('http://localhost:3000/products/category/$categoryId'));
@@ -158,6 +161,272 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
       },
     );
   }
+
+  void showMessagePopup(BuildContext context) {
+    bool isFeedbackMode = false; // Track whether the dialog is in feedback mode
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(isFeedbackMode ? 'Feedback' : 'Messages'),
+              content: Container(
+                width: double.maxFinite,
+                constraints: BoxConstraints(minHeight: 300),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              isFeedbackMode = false; // Switch to Messages mode
+                            });
+                          },
+                          child: Text('Messages', style: TextStyle(color: Colors.white)),
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all<Color>(
+                                !isFeedbackMode ? Colors.black : Colors.grey),
+                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30.0),
+                              ),
+                            ),
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              isFeedbackMode = true; // Switch to Feedback mode
+                            });
+                          },
+                          child: Text('Feedback', style: TextStyle(color: Colors.white)),
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all<Color>(
+                                isFeedbackMode ? Colors.black : Colors.grey),
+                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30.0),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 16),
+                    Expanded(
+                      child: FutureBuilder<List<Map<String, dynamic>>>(
+                        future: isFeedbackMode ? fetchFeedback() : fetchMessages(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return Center(child: CircularProgressIndicator());
+                          } else if (snapshot.hasError) {
+                            return Center(child: Text('Error: ${snapshot.error}'));
+                          } else {
+                            final data = snapshot.data ?? [];
+
+                            return isFeedbackMode
+                                ? buildFeedbackTable(data)
+                                : buildMessagesList(data);
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  final Map<String, IconData> customSmileyFaces = {
+    'Très bien': Icons.sentiment_very_satisfied,
+    'Bien': Icons.sentiment_satisfied,
+    'Acceptable': Icons.sentiment_neutral,
+    'Pauvre': Icons.sentiment_dissatisfied,
+    'Très pauvre': Icons.sentiment_very_dissatisfied,
+  };
+
+  Widget buildFeedbackTable(List<Map<String, dynamic>> feedbackData) {
+    final feedbackCount = {
+      'Très bien': 0,
+      'Bien': 0,
+      'Acceptable': 0,
+      'Pauvre': 0,
+      'Très pauvre': 0,
+    };
+
+    for (final feedback in feedbackData) {
+      final rateTitle = feedback['rate_title'];
+      if (feedbackCount.containsKey(rateTitle)) {
+        feedbackCount[rateTitle] = (feedbackCount[rateTitle] ?? 0) + 1;
+      }
+    }
+
+    return DataTable(
+      columns: <DataColumn>[
+        DataColumn(label: Text('Rating')),
+        DataColumn(label: Text('Count')),
+      ],
+      rows: feedbackCount.entries.map((entry) {
+        final rating = entry.key;
+        final count = entry.value;
+        final icon = customSmileyFaces[rating];
+
+        return DataRow(
+          cells: <DataCell>[
+            DataCell(
+              Row(
+                children: [
+                  Icon(icon ?? Icons.error, color: getColorForRating(rating)),
+                  SizedBox(width: 8),
+                  Text(rating),
+                ],
+              ),
+            ),
+            DataCell(Text(count.toString())),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
+  Color getColorForRating(String rating) {
+    switch (rating) {
+      case 'Très bien':
+        return Colors.blue;
+      case 'Bien':
+        return Colors.lightGreen;
+      case 'Acceptable':
+        return Colors.amber;
+      case 'Pauvre':
+        return Colors.orange;
+      case 'Très pauvre':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+
+  Widget buildMessagesList(List<Map<String, dynamic>> messagesData) {
+    return ListView.builder(
+      itemCount: messagesData.length,
+      itemBuilder: (context, index) {
+        final item = messagesData[index];
+
+        return Container(
+          width: 150,
+          margin: EdgeInsets.all(8),
+          padding: EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(8),
+            color: item['backgroundColor'],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Padding(
+                padding: EdgeInsets.only(bottom: 8),
+                child: Text(
+                  'User: ${item['user'] ?? ''}',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(bottom: 8),
+                child: Text(
+                  'Status: ${item['status'] ?? ''}',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(bottom: 15),
+                child: Text(
+                  item['text'] ?? '',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  // Add your logic here for the 'Effectué' button
+                },
+                child: Text('Effectué'),
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all<Color>(Colors.black),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> fetchFeedback() async {
+    final url = Uri.parse('http://localhost:3000/rates');
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        return List<Map<String, dynamic>>.from(jsonData);
+      } else {
+        throw Exception('Failed to load feedback');
+      }
+    } catch (e) {
+      throw Exception('Error fetching feedback: $e');
+    }
+  }
+
+
+  Future<List<Map<String, dynamic>>> fetchMessages() async {
+    final url = Uri.parse('http://localhost:3000/messages');
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        final List<dynamic> messagesJsonList = jsonData['messages'];
+
+        final List<Map<String, dynamic>> messages = messagesJsonList.map<Map<String, dynamic>>((messageJson) {
+          final String status = messageJson['status']; // Get the status field
+
+          // Determine the background color based on the status
+          final Color backgroundColor = status == 'urgent' ? Colors.red : Colors.transparent;
+
+          return {
+            'id': messageJson['id'],
+            'text': messageJson['message'],
+            'user': messageJson['user'],
+            'status': status,
+            'backgroundColor': backgroundColor, // Add background color
+          };
+        }).toList();
+
+        return messages;
+      } else {
+        throw Exception('Failed to load messages');
+      }
+    } catch (e) {
+      throw Exception('Error fetching messages: $e');
+    }
+  }
+
+
+
+
 
   void _showPasswordPopup(String employeeName) {
     showDialog(
@@ -752,18 +1021,19 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
                 Column(
                   children: [
                     SizedBox(height: 16),
-                    _buildLeftBarButton('Cashier', Icons.money, true),
+                    _buildLeftBarButton('Cashier', Icons.money, true, context),
                     SizedBox(height: 16),
-                    _buildLeftBarButton('Dashboard', Icons.dashboard, false),
+                    _buildLeftBarButton('Dashboard', Icons.dashboard, false, context),
                     SizedBox(height: 16),
-                    _buildLeftBarButton('Message', Icons.message, false),
+                    _buildLeftBarButton('Message', Icons.message, false, context),
                   ],
                 ),
+
                 Column(
                   children: [
                     Divider(height: 0),
                     SizedBox(height: 16),
-                    _buildLeftBarButton('Logout', Icons.logout, false),
+                    _buildLeftBarButton('Logout', Icons.logout, false, context),
                     SizedBox(height: 16),
                   ],
                 ),
@@ -953,6 +1223,36 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
     );
   }
 
+  Widget _buildCategoryButton(String category, int categoryId) {
+    return ElevatedButton(
+      onPressed: () {
+        setState(() {
+          _selectedCategory = categoryId;
+        });
+      },
+      child: Text(
+        category,
+        style: TextStyle(fontSize: 16, color: _selectedCategory == categoryId ? Colors.white : Colors.black),
+      ),
+      style: ButtonStyle(
+        backgroundColor: MaterialStateProperty.all<Color>(_selectedCategory == categoryId ? Colors.black : Colors.white),
+        padding: MaterialStateProperty.all<EdgeInsets>(
+          EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        ),
+        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(
+              color: Colors.grey[300]!,
+              width: 1.5,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+
   Future<List<Bill>> _fetchUnpaidBills() async {
     final response = await http.get(Uri.parse('http://localhost:3000/bills'));
 
@@ -983,7 +1283,10 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
 
 
 
-  Widget _buildLeftBarButton(String label, IconData icon, bool isSelected) {
+  Widget _buildLeftBarButton(String label, IconData icon, bool isSelected, BuildContext context) {
+
+
+
     if (label == 'View Bills') {
       return ElevatedButton.icon(
         onPressed: () async {
@@ -1057,58 +1360,91 @@ class _CashierPageState extends State<CashierPage> with TickerProviderStateMixin
           ),
         ),
       );
-    } else {
-      // For other buttons, return the standard ElevatedButton.icon
-      return ElevatedButton.icon(
-        onPressed: () {},
-        icon: Icon(
-          icon,
-          color: isSelected ? Colors.white : Colors.black,
-        ),
-        label: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-        style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.all<Color>(
-            isSelected ? Colors.black : Colors.white,
-          ),
-          padding: MaterialStateProperty.all<EdgeInsets>(
-            EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-          ),
-          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(
-                color: Colors.grey[300]!,
-                width: 1.5,
+    } else if (label == 'Message') {
+      return FutureBuilder(
+        future: fetchMessages(),
+        builder: (context, snapshot) {
+          final undoneMessages = snapshot.data as List<Map<String, dynamic>>?;
+
+          int undoneCount = undoneMessages?.length ?? 0;
+
+          return Stack(
+            children: [
+              ElevatedButton.icon(
+                onPressed: () {
+                  showMessagePopup(context);
+                },
+                icon: Icon(
+                  icon,
+                  color: isSelected ? Colors.white : Colors.black,
+                ),
+                label: Text(
+                  label,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : Colors.black,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all<Color>(
+                    isSelected ? Colors.black : Colors.white,
+                  ),
+                  padding: MaterialStateProperty.all<EdgeInsets>(
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 16), // Added const here
+                  ),
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: const BorderSide(
+                        color: Colors.grey,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-        ),
+              if (undoneCount > 0)
+                Positioned(
+                  right: 0,
+                  child: CircleAvatar(
+                    backgroundColor: Colors.red,
+                    radius: 9,
+                    child: Text(
+                      undoneCount.toString(),
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
       );
     }
-  }
 
 
-
-
-  Widget _buildCategoryButton(String category, int categoryId) {
-    return ElevatedButton(
+    // Default return statement when label is not "View Bills" or "Message"
+    return ElevatedButton.icon(
       onPressed: () {
-        setState(() {
-          _selectedCategory = categoryId;
-        });
+        // Handle other button clicks here
       },
-      child: Text(
-        category,
-        style: TextStyle(fontSize: 16, color: _selectedCategory == categoryId ? Colors.white : Colors.black),
+      icon: Icon(
+        icon,
+        color: isSelected ? Colors.white : Colors.black,
+      ),
+      label: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? Colors.white : Colors.black,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
       ),
       style: ButtonStyle(
-        backgroundColor: MaterialStateProperty.all<Color>(_selectedCategory == categoryId ? Colors.black : Colors.white),
+        backgroundColor: MaterialStateProperty.all<Color>(
+          isSelected ? Colors.black : Colors.white,
+        ),
         padding: MaterialStateProperty.all<EdgeInsets>(
           EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         ),

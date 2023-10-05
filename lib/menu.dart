@@ -559,16 +559,133 @@ class _MenuTabletState extends State<MenuTablet> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return SmileyRatingDialog(
-          onRatingSelected: (rating) {
-            Navigator.of(context).pop();
-            _showRatingThankYouMessage();
-          },
+        int selectedRating = 0; // Initialize selectedRating
+
+        return AlertDialog(
+          title: Text('Rate the Service'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      // Set selectedRating based on user's choice
+                      selectedRating = 1;
+                      // Send the selected rating to the server
+                      _sendRatingToServer(selectedRating);
+                      Navigator.of(context).pop();
+                      _showRatingThankYouMessage();
+                    },
+                    child: Icon(
+                      Icons.sentiment_very_dissatisfied,
+                      color: Colors.red,
+                      size: 50,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      // Set selectedRating based on user's choice
+                      selectedRating = 2;
+                      // Send the selected rating to the server
+                      _sendRatingToServer(selectedRating);
+                      Navigator.of(context).pop();
+                      _showRatingThankYouMessage();
+                    },
+                    child: Icon(
+                      Icons.sentiment_dissatisfied,
+                      color: Colors.orange,
+                      size: 50,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      // Set selectedRating based on user's choice
+                      selectedRating = 3;
+                      // Send the selected rating to the server
+                      _sendRatingToServer(selectedRating);
+                      Navigator.of(context).pop();
+                      _showRatingThankYouMessage();
+                    },
+                    child: Icon(
+                      Icons.sentiment_neutral,
+                      color: Colors.yellow,
+                      size: 50,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      // Set selectedRating based on user's choice
+                      selectedRating = 4;
+                      // Send the selected rating to the server
+                      _sendRatingToServer(selectedRating);
+                      Navigator.of(context).pop();
+                      _showRatingThankYouMessage();
+                    },
+                    child: Icon(
+                      Icons.sentiment_satisfied,
+                      color: Colors.green,
+                      size: 50,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      // Set selectedRating based on user's choice
+                      selectedRating = 5;
+                      // Send the selected rating to the server
+                      _sendRatingToServer(selectedRating);
+                      Navigator.of(context).pop();
+                      _showRatingThankYouMessage();
+                    },
+                    child: Icon(
+                      Icons.sentiment_very_satisfied,
+                      color: Colors.blue,
+                      size: 50,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         );
       },
     );
   }
 
+  void _sendRatingToServer(int selectedRating) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:3000/rates'),
+        body: {'rate_title': _getRateTitle(selectedRating)},
+      );
+
+      if (response.statusCode == 200) {
+        print('Rating sent successfully');
+      } else {
+        print('Failed to send rating: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error sending rating: $error');
+    }
+  }
+
+  String _getRateTitle(int selectedRating) {
+    switch (selectedRating) {
+      case 1:
+        return 'Très pauvre';
+      case 2:
+        return 'Pauvre';
+      case 3:
+        return 'Acceptable';
+      case 4:
+        return 'Bien';
+      case 5:
+        return 'Très bien';
+      default:
+        return '';
+    }
+  }
   void _showRatingThankYouMessage() {
     showDialog(
       context: context,
